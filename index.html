@@ -1,1 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcador de Waterpolo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a2463 0%, #3e92cc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: rgba(0, 30, 60, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #3e92cc;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2a7db5;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #ff5252;
+            transform: translateY(-3px);
+        }
+        
+        .btn-success {
+            background-color: #4ecdc4;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3db8af;
+            transform: translateY(-3px);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .team-panel {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .team-header {
+            margin-bottom: 25px;
+        }
+        
+        .team-name {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .team-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .logo-placeholder {
+            font-size: 2.5rem;
+        }
+        
+        .score-section {
+            margin-bottom: 25px;
+        }
+        
+        .score {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #ffd166;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        .score-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .score-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.8rem;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .score-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .timeouts-section {
+            margin-top: 25px;
+        }
+        
+        .timeouts-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #ffd166;
+        }
+        
+        .timeouts-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .timeout-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .timeout-used {
+            background-color: #ff6b6b;
+        }
+        
+        .timeout-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            background-color: #ff6b6b;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .timeout-btn:hover {
+            background-color: #ff5252;
+            transform: translateY(-3px);
+        }
+        
+        .timer-panel {
+            grid-column: span 2;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #ffd166;
+            margin: 20px 0;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .timer-presets {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .timer-preset-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 2px solid #4ecdc4;
+            background-color: transparent;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .timer-preset-btn:hover {
+            background-color: #4ecdc4;
+        }
+        
+        .timer-preset-btn.active {
+            background-color: #4ecdc4;
+        }
+        
+        .edit-time-input {
+            width: 80px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #3e92cc;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .edit-team-form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .edit-input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #3e92cc;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .instructions {
+            background-color: rgba(0, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .instructions h2 {
+            color: #ffd166;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .timer-panel {
+                grid-column: span 1;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .timer-display {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-water"></i> Marcador de Waterpolo</h1>
+            <p class="subtitle">Controla el marcador, tiempos muertos y temporizadores para partidos de waterpolo</p>
+            <div class="controls">
+                <button class="btn btn-primary" id="newWindowBtn">
+                    <i class="fas fa-external-link-alt"></i> Abrir Temporizador en Nueva Ventana
+                </button>
+                <button class="btn btn-success" id="resetAllBtn">
+                    <i class="fas fa-redo"></i> Reiniciar Todo
+                </button>
+                <button class="btn btn-secondary" id="swapTeamsBtn">
+                    <i class="fas fa-exchange-alt"></i> Intercambiar Equipos
+                </button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <!-- Equipo Local -->
+            <div class="team-panel">
+                <div class="team-header">
+                    <div class="team-logo" id="localLogo">
+                        <i class="fas fa-swimmer logo-placeholder"></i>
+                    </div>
+                    <div class="team-name" id="localName">Equipo Local</div>
+                </div>
+                
+                <div class="score-section">
+                    <div class="score" id="localScore">0</div>
+                    <div class="score-controls">
+                        <button class="score-btn" id="localMinus">-</button>
+                        <button class="score-btn" id="localPlus">+</button>
+                    </div>
+                </div>
+                
+                <div class="timeouts-section">
+                    <div class="timeouts-title">Tiempos Muertos</div>
+                    <div class="timeouts-display" id="localTimeouts">
+                        <div class="timeout-box">1</div>
+                        <div class="timeout-box">2</div>
+                        <div class="timeout-box">3</div>
+                    </div>
+                    <button class="timeout-btn" id="localTimeoutBtn">Pedir Tiempo</button>
+                </div>
+                
+                <div class="edit-team-form">
+                    <input type="text" class="edit-input" id="localNameInput" placeholder="Nombre del equipo local">
+                    <input type="text" class="edit-input" id="localLogoInput" placeholder="URL del escudo (opcional)">
+                    <button class="btn btn-primary" id="saveLocalBtn">Guardar Cambios</button>
+                </div>
+            </div>
+            
+            <!-- Equipo Visitante -->
+            <div class="team-panel">
+                <div class="team-header">
+                    <div class="team-logo" id="visitorLogo">
+                        <i class="fas fa-water logo-placeholder"></i>
+                    </div>
+                    <div class="team-name" id="visitorName">Equipo Visitante</div>
+                </div>
+                
+                <div class="score-section">
+                    <div class="score" id="visitorScore">0</div>
+                    <div class="score-controls">
+                        <button class="score-btn" id="visitorMinus">-</button>
+                        <button class="score-btn" id="visitorPlus">+</button>
+                    </div>
+                </div>
+                
+                <div class="timeouts-section">
+                    <div class="timeouts-title">Tiempos Muertos</div>
+                    <div class="timeouts-display" id="visitorTimeouts">
+                        <div class="timeout-box">1</div>
+                        <div class="timeout-box">2</div>
+                        <div class="timeout-box">3</div>
+                    </div>
+                    <button class="timeout-btn" id="visitorTimeoutBtn">Pedir Tiempo</button>
+                </div>
+                
+                <div class="edit-team-form">
+                    <input type="text" class="edit-input" id="visitorNameInput" placeholder="Nombre del equipo visitante">
+                    <input type="text" class="edit-input" id="visitorLogoInput" placeholder="URL del escudo (opcional)">
+                    <button class="btn btn-primary" id="saveVisitorBtn">Guardar Cambios</button>
+                </div>
+            </div>
+            
+            <!-- Temporizador -->
+            <div class="timer-panel">
+                <h2><i class="fas fa-stopwatch"></i> Temporizador de Posesión</h2>
+                <div class="timer-display" id="timerDisplay">00:30</div>
+                
+                <div class="timer-controls">
+                    <button class="btn btn-primary" id="startTimerBtn">
+                        <i class="fas fa-play"></i> Iniciar
+                    </button>
+                    <button class="btn btn-secondary" id="pauseTimerBtn">
+                        <i class="fas fa-pause"></i> Pausar
+                    </button>
+                    <button class="btn btn-success" id="resetTimerBtn">
+                        <i class="fas fa-redo"></i> Reiniciar
+                    </button>
+                </div>
+                
+                <div class="timer-presets">
+                    <button class="timer-preset-btn active" id="preset30">30 segundos</button>
+                    <button class="timer-preset-btn" id="preset20">20 segundos</button>
+                </div>
+                
+                <div class="timer-presets" style="margin-top: 15px;">
+                    <span style="margin-right: 10px;">Tiempo personalizado:</span>
+                    <input type="number" class="edit-time-input" id="customTime" min="5" max="60" value="30">
+                    <span>segundos</span>
+                    <button class="btn btn-primary" id="setCustomTime" style="margin-left: 10px;">Aplicar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2><i class="fas fa-info-circle"></i> Instrucciones de Uso</h2>
+            <ul>
+                <li><strong>Control de marcador:</strong> Usa los botones + y - para ajustar los goles de cada equipo.</li>
+                <li><strong>Tiempos muertos:</strong> Cada equipo tiene 3 tiempos muertos por partido. Haz clic en "Pedir Tiempo" para registrar uno.</li>
+                <li><strong>Temporizador de posesión:</strong> Controla el tiempo de ataque (30s por defecto). Puedes cambiarlo a 20s o personalizarlo.</li>
+                <li><strong>Nueva ventana:</strong> Usa el botón "Abrir Temporizador en Nueva Ventana" para tener el temporizador en una pantalla separada.</li>
+                <li><strong>Personalización:</strong> Cambia los nombres y escudos de los equipos usando los campos de edición.</li>
+                <li><strong>Reiniciar:</strong> El botón "Reiniciar Todo" restablece el marcador, tiempos muertos y temporizador.</li>
+            </ul>
+            <p style="margin-top: 15px; font-style: italic; color: #ffd166;">
+                <i class="fas fa-exclamation-triangle"></i> Para alojar en GitHub, simplemente guarda este archivo como index.html y súbelo a un repositorio.
+            </p>
+        </div>
+    </div>
 
+    <script>
+        // Variables globales
+        let localScore = 0;
+        let visitorScore = 0;
+        let localTimeoutsUsed = 0;
+        let visitorTimeoutsUsed = 0;
+        let timerTime = 30;
+        let timerInterval = null;
+        let isTimerRunning = false;
+        let timerDisplay = "00:30";
+
+        // Elementos del DOM
+        const localScoreEl = document.getElementById('localScore');
+        const visitorScoreEl = document.getElementById('visitorScore');
+        const localTimeoutsEl = document.getElementById('localTimeouts');
+        const visitorTimeoutsEl = document.getElementById('visitorTimeouts');
+        const timerDisplayEl = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const pauseTimerBtn = document.getElementById('pauseTimerBtn');
+        const resetTimerBtn = document.getElementById('resetTimerBtn');
+        const preset30Btn = document.getElementById('preset30');
+        const preset20Btn = document.getElementById('preset20');
+        const customTimeInput = document.getElementById('customTime');
+        const setCustomTimeBtn = document.getElementById('setCustomTime');
+
+        // Inicializar la aplicación
+        function init() {
+            // Cargar datos guardados si existen
+            loadSavedData();
+            
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Actualizar la interfaz
+            updateScores();
+            updateTimeouts();
+            updateTimerDisplay();
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Marcador local
+            document.getElementById('localPlus').addEventListener('click', () => {
+                localScore++;
+                updateScores();
+                saveData();
+            });
+            
+            document.getElementById('localMinus').addEventListener('click', () => {
+                if (localScore > 0) localScore--;
+                updateScores();
+                saveData();
+            });
+            
+            // Marcador visitante
+            document.getElementById('visitorPlus').addEventListener('click', () => {
+                visitorScore++;
+                updateScores();
+                saveData();
+            });
+            
+            document.getElementById('visitorMinus').addEventListener('click', () => {
+                if (visitorScore > 0) visitorScore--;
+                updateScores();
+                saveData();
+            });
+            
+            // Tiempos muertos
+            document.getElementById('localTimeoutBtn').addEventListener('click', () => {
+                if (localTimeoutsUsed < 3) {
+                    localTimeoutsUsed++;
+                    updateTimeouts();
+                    saveData();
+                }
+            });
+            
+            document.getElementById('visitorTimeoutBtn').addEventListener('click', () => {
+                if (visitorTimeoutsUsed < 3) {
+                    visitorTimeoutsUsed++;
+                    updateTimeouts();
+                    saveData();
+                }
+            });
+            
+            // Temporizador
+            startTimerBtn.addEventListener('click', startTimer);
+            pauseTimerBtn.addEventListener('click', pauseTimer);
+            resetTimerBtn.addEventListener('click', resetTimer);
+            
+            // Presets del temporizador
+            preset30Btn.addEventListener('click', () => setTimerPreset(30));
+            preset20Btn.addEventListener('click', () => setTimerPreset(20));
+            setCustomTimeBtn.addEventListener('click', setCustomTime);
+            
+            // Botones de control
+            document.getElementById('newWindowBtn').addEventListener('click', openTimerWindow);
+            document.getElementById('resetAllBtn').addEventListener('click', resetAll);
+            document.getElementById('swapTeamsBtn').addEventListener('click', swapTeams);
+            
+            // Guardar equipos
+            document.getElementById('saveLocalBtn').addEventListener('click', saveLocalTeam);
+            document.getElementById('saveVisitorBtn').addEventListener('click', saveVisitorTeam);
+            
+            // Permitir Enter en campos de entrada
+            document.getElementById('localNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveLocalTeam();
+            });
+            
+            document.getElementById('visitorNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveVisitorTeam();
+            });
+            
+            document.getElementById('customTime').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') setCustomTime();
+            });
+        }
+
+        // Actualizar marcadores
+        function updateScores() {
+            localScoreEl.textContent = localScore;
+            visitorScoreEl.textContent = visitorScore;
+        }
+
+        // Actualizar tiempos muertos
+        function updateTimeouts() {
+            // Limpiar displays
+            localTimeoutsEl.innerHTML = '';
+            visitorTimeoutsEl.innerHTML = '';
+            
+            // Actualizar local
+            for (let i = 1; i <= 3; i++) {
+                const timeoutBox = document.createElement('div');
+                timeoutBox.className = 'timeout-box';
+                if (i <= localTimeoutsUsed) {
+                    timeoutBox.classList.add('timeout-used');
+                }
+                timeoutBox.textContent = i;
+                localTimeoutsEl.appendChild(timeoutBox);
+            }
+            
+            // Actualizar visitante
+            for (let i = 1; i <= 3; i++) {
+                const timeoutBox = document.createElement('div');
+                timeoutBox.className = 'timeout-box';
+                if (i <= visitorTimeoutsUsed) {
+                    timeoutBox.classList.add('timeout-used');
+                }
+                timeoutBox.textContent = i;
+                visitorTimeoutsEl.appendChild(timeoutBox);
+            }
+            
+            // Deshabilitar botones si se usaron todos los tiempos
+            document.getElementById('localTimeoutBtn').disabled = localTimeoutsUsed >= 3;
+            document.getElementById('visitorTimeoutBtn').disabled = visitorTimeoutsUsed >= 3;
+        }
+
+        // Temporizador
+        function startTimer() {
+            if (isTimerRunning) return;
+            
+            isTimerRunning = true;
+            startTimerBtn.disabled = true;
+            pauseTimerBtn.disabled = false;
+            
+            const startTime = Date.now();
+            const endTime = startTime + (timerTime * 1000);
+            
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const remaining = Math.max(0, endTime - now);
+                
+                const seconds = Math.ceil(remaining / 1000);
+                const display = `00:${seconds.toString().padStart(2, '0')}`;
+                
+                timerDisplayEl.textContent = display;
+                timerDisplay = display;
+                
+                // Cambiar color cuando queden 5 segundos o menos
+                if (seconds <= 5) {
+                    timerDisplayEl.style.color = '#ff6b6b';
+                } else {
+                    timerDisplayEl.style.color = '#ffd166';
+                }
+                
+                // Cuando llegue a cero
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    startTimerBtn.disabled = false;
+                    pauseTimerBtn.disabled = true;
+                    
+                    // Reproducir sonido de alarma (simulado)
+                    if (typeof window.beep === 'function') {
+                        window.beep();
+                    }
+                }
+            }, 100);
+        }
+
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            startTimerBtn.disabled = false;
+            pauseTimerBtn.disabled = true;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            startTimerBtn.disabled = false;
+            pauseTimerBtn.disabled = true;
+            timerDisplayEl.style.color = '#ffd166';
+            updateTimerDisplay();
+        }
+
+        function setTimerPreset(seconds) {
+            timerTime = seconds;
+            customTimeInput.value = seconds;
+            
+            // Actualizar botones activos
+            if (seconds === 30) {
+                preset30Btn.classList.add('active');
+                preset20Btn.classList.remove('active');
+            } else {
+                preset30Btn.classList.remove('active');
+                preset20Btn.classList.add('active');
+            }
+            
+            resetTimer();
+            saveData();
+        }
+
+        function setCustomTime() {
+            const customTime = parseInt(customTimeInput.value);
+            if (customTime >= 5 && customTime <= 60) {
+                timerTime = customTime;
+                
+                // Actualizar botones activos
+                preset30Btn.classList.remove('active');
+                preset20Btn.classList.remove('active');
+                
+                resetTimer();
+                saveData();
+            } else {
+                alert('Por favor, introduce un valor entre 5 y 60 segundos.');
+                customTimeInput.value = timerTime;
+            }
+        }
+
+        function updateTimerDisplay() {
+            timerDisplayEl.textContent = `00:${timerTime.toString().padStart(2, '0')}`;
+            timerDisplay = timerDisplayEl.textContent;
+        }
+
+        // Abrir temporizador en nueva ventana
+        function openTimerWindow() {
+            const timerWindow = window.open('', 'TimerWindow', 'width=400,height=300,left=100,top=100');
+            
+            if (timerWindow) {
+                timerWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Temporizador de Waterpolo</title>
+                        <style>
+                            body {
+                                background: linear-gradient(135deg, #0a2463 0%, #3e92cc 100%);
+                                color: white;
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                height: 100vh;
+                                margin: 0;
+                                padding: 20px;
+                                text-align: center;
+                            }
+                            .timer {
+                                font-size: 5rem;
+                                font-weight: 800;
+                                color: #ffd166;
+                                margin: 20px 0;
+                                text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+                                font-family: 'Courier New', monospace;
+                            }
+                            .controls {
+                                display: flex;
+                                gap: 10px;
+                                margin-top: 20px;
+                            }
+                            button {
+                                padding: 10px 20px;
+                                border: none;
+                                border-radius: 50px;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background-color: #3e92cc;
+                                color: white;
+                            }
+                            button:hover {
+                                background-color: #2a7db5;
+                            }
+                            .title {
+                                font-size: 1.5rem;
+                                margin-bottom: 10px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="title">Temporizador de Posesión</div>
+                        <div class="timer" id="timer">${timerDisplay}</div>
+                        <div class="controls">
+                            <button id="start">Iniciar</button>
+                            <button id="pause">Pausar</button>
+                            <button id="reset">Reiniciar</button>
+                        </div>
+                        <script>
+                            let timerTime = ${timerTime};
+                            let timerInterval = null;
+                            let isRunning = false;
+                            const timerEl = document.getElementById('timer');
+                            
+                            function updateTimer() {
+                                timerEl.textContent = "00:" + timerTime.toString().padStart(2, '0');
+                            }
+                            
+                            function startTimer() {
+                                if (isRunning) return;
+                                isRunning = true;
+                                
+                                const startTime = Date.now();
+                                const endTime = startTime + (timerTime * 1000);
+                                
+                                timerInterval = setInterval(() => {
+                                    const now = Date.now();
+                                    const remaining = Math.max(0, endTime - now);
+                                    
+                                    const seconds = Math.ceil(remaining / 1000);
+                                    timerEl.textContent = "00:" + seconds.toString().padStart(2, '0');
+                                    
+                                    if (seconds <= 5) {
+                                        timerEl.style.color = '#ff6b6b';
+                                    } else {
+                                        timerEl.style.color = '#ffd166';
+                                    }
+                                    
+                                    if (remaining <= 0) {
+                                        clearInterval(timerInterval);
+                                        isRunning = false;
+                                        // Beep
+                                        try {
+                                            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                                            const oscillator = audioContext.createOscillator();
+                                            oscillator.connect(audioContext.destination);
+                                            oscillator.start();
+                                            setTimeout(() => oscillator.stop(), 500);
+                                        } catch(e) {
+                                            console.log("No se pudo reproducir sonido");
+                                        }
+                                    }
+                                }, 100);
+                            }
+                            
+                            function pauseTimer() {
+                                if (!isRunning) return;
+                                clearInterval(timerInterval);
+                                isRunning = false;
+                            }
+                            
+                            function resetTimer() {
+                                clearInterval(timerInterval);
+                                isRunning = false;
+                                timerEl.style.color = '#ffd166';
+                                updateTimer();
+                            }
+                            
+                            document.getElementById('start').addEventListener('click', startTimer);
+                            document.getElementById('pause').addEventListener('click', pauseTimer);
+                            document.getElementById('reset').addEventListener('click', resetTimer);
+                            
+                            // Sincronizar con la ventana principal
+                            window.addEventListener('storage', function(e) {
+                                if (e.key === 'waterpolo_timer' && e.newValue) {
+                                    const data = JSON.parse(e.newValue);
+                                    timerTime = data.timerTime;
+                                    if (!isRunning) {
+                                        updateTimer();
+                                    }
+                                }
+                            });
+                            
+                            // Actualizar desde la ventana principal periódicamente
+                            setInterval(() => {
+                                if (!isRunning && window.opener) {
+                                    try {
+                                        const mainTimer = window.opener.timerTime;
+                                        if (mainTimer !== timerTime) {
+                                            timerTime = mainTimer;
+                                            updateTimer();
+                                        }
+                                    } catch(e) {
+                                        // Acceso cruzado no permitido, usar localStorage
+                                    }
+                                }
+                            }, 500);
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                
+                timerWindow.document.close();
+            } else {
+                alert('Por favor, permite ventanas emergentes para esta función.');
+            }
+        }
+
+        // Reiniciar todo
+        function resetAll() {
+            if (confirm('¿Estás seguro de que quieres reiniciar todo? Se perderán los datos del partido actual.')) {
+                localScore = 0;
+                visitorScore = 0;
+                localTimeoutsUsed = 0;
+                visitorTimeoutsUsed = 0;
+                setTimerPreset(30);
+                
+                updateScores();
+                updateTimeouts();
+                resetTimer();
+                saveData();
+            }
+        }
+
+        // Intercambiar equipos
+        function swapTeams() {
+            // Intercambiar puntuaciones
+            [localScore, visitorScore] = [visitorScore, localScore];
+            
+            // Intercambiar tiempos muertos
+            [localTimeoutsUsed, visitorTimeoutsUsed] = [visitorTimeoutsUsed, localTimeoutsUsed];
+            
+            // Intercambiar nombres
+            const localName = document.getElementById('localName').textContent;
+            const visitorName = document.getElementById('visitorName').textContent;
+            document.getElementById('localName').textContent = visitorName;
+            document.getElementById('visitorName').textContent = localName;
+            
+            // Intercambiar logos
+            const localLogo = document.getElementById('localLogo').innerHTML;
+            const visitorLogo = document.getElementById('visitorLogo').innerHTML;
+            document.getElementById('localLogo').innerHTML = visitorLogo;
+            document.getElementById('visitorLogo').innerHTML = localLogo;
+            
+            // Actualizar campos de entrada
+            document.getElementById('localNameInput').value = visitorName;
+            document.getElementById('visitorNameInput').value = localName;
+            
+            updateScores();
+            updateTimeouts();
+            saveData();
+        }
+
+        // Guardar equipo local
+        function saveLocalTeam() {
+            const name = document.getElementById('localNameInput').value.trim();
+            const logoUrl = document.getElementById('localLogoInput').value.trim();
+            
+            if (name) {
+                document.getElementById('localName').textContent = name;
+            }
+            
+            if (logoUrl) {
+                document.getElementById('localLogo').innerHTML = `<img src="${logoUrl}" alt="${name}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                document.getElementById('localLogo').innerHTML = '<i class="fas fa-swimmer logo-placeholder"></i>';
+            }
+            
+            saveData();
+        }
+
+        // Guardar equipo visitante
+        function saveVisitorTeam() {
+            const name = document.getElementById('visitorNameInput').value.trim();
+            const logoUrl = document.getElementById('visitorLogoInput').value.trim();
+            
+            if (name) {
+                document.getElementById('visitorName').textContent = name;
+            }
+            
+            if (logoUrl) {
+                document.getElementById('visitorLogo').innerHTML = `<img src="${logoUrl}" alt="${name}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                document.getElementById('visitorLogo').innerHTML = '<i class="fas fa-water logo-placeholder"></i>';
+            }
+            
+            saveData();
+        }
+
+        // Guardar datos en localStorage
+        function saveData() {
+            const data = {
+                localScore,
+                visitorScore,
+                localTimeoutsUsed,
+                visitorTimeoutsUsed,
+                timerTime,
+                localName: document.getElementById('localName').textContent,
+                visitorName: document.getElementById('visitorName').textContent,
+                localLogo: document.getElementById('localLogo').innerHTML,
+                visitorLogo: document.getElementById('visitorLogo').innerHTML,
+                localNameInput: document.getElementById('localNameInput').value,
+                visitorNameInput: document.getElementById('visitorNameInput').value,
+                localLogoInput: document.getElementById('localLogoInput').value,
+                visitorLogoInput: document.getElementById('visitorLogoInput').value
+            };
+            
+            localStorage.setItem('waterpolo_scoreboard', JSON.stringify(data));
+            
+            // Guardar también el temporizador por separado para sincronización
+            localStorage.setItem('waterpolo_timer', JSON.stringify({timerTime}));
+        }
+
+        // Cargar datos guardados
+        function loadSavedData() {
+            const savedData = localStorage.getItem('waterpolo_scoreboard');
+            
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                localScore = data.localScore || 0;
+                visitorScore = data.visitorScore || 0;
+                localTimeoutsUsed = data.localTimeoutsUsed || 0;
+                visitorTimeoutsUsed = data.visitorTimeoutsUsed || 0;
+                timerTime = data.timerTime || 30;
+                
+                if (data.localName) {
+                    document.getElementById('localName').textContent = data.localName;
+                }
+                
+                if (data.visitorName) {
+                    document.getElementById('visitorName').textContent = data.visitorName;
+                }
+                
+                if (data.localLogo) {
+                    document.getElementById('localLogo').innerHTML = data.localLogo;
+                }
+                
+                if (data.visitorLogo) {
+                    document.getElementById('visitorLogo').innerHTML = data.visitorLogo;
+                }
+                
+                if (data.localNameInput) {
+                    document.getElementById('localNameInput').value = data.localNameInput;
+                }
+                
+                if (data.visitorNameInput) {
+                    document.getElementById('visitorNameInput').value = data.visitorNameInput;
+                }
+                
+                if (data.localLogoInput) {
+                    document.getElementById('localLogoInput').value = data.localLogoInput;
+                }
+                
+                if (data.visitorLogoInput) {
+                    document.getElementById('visitorLogoInput').value = data.visitorLogoInput;
+                }
+                
+                // Actualizar botones de preset
+                if (timerTime === 30) {
+                    preset30Btn.classList.add('active');
+                    preset20Btn.classList.remove('active');
+                } else if (timerTime === 20) {
+                    preset30Btn.classList.remove('active');
+                    preset20Btn.classList.add('active');
+                } else {
+                    preset30Btn.classList.remove('active');
+                    preset20Btn.classList.remove('active');
+                }
+                
+                customTimeInput.value = timerTime;
+            }
+        }
+
+        // Inicializar la aplicación cuando se cargue la página
+        window.addEventListener('DOMContentLoaded', init);
+        
+        // Sincronizar temporizador entre ventanas
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'waterpolo_timer' && e.newValue) {
+                const data = JSON.parse(e.newValue);
+                timerTime = data.timerTime;
+                customTimeInput.value = timerTime;
+                
+                if (!isTimerRunning) {
+                    updateTimerDisplay();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

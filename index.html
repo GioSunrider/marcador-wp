@@ -281,6 +281,7 @@
             justify-content: center;
             gap: 15px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         
         .timer-preset-btn {
@@ -292,6 +293,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
+            min-width: 100px;
         }
         
         .timer-preset-btn:hover {
@@ -401,6 +403,28 @@
             align-items: center;
         }
         
+        .timer-sync-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .sync-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .sync-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -421,6 +445,11 @@
             .score {
                 font-size: 4rem;
             }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -439,10 +468,10 @@
             </div>
             <div class="window-controls">
                 <button class="btn btn-success" id="possession1WindowBtn">
-                    <i class="fas fa-stopwatch"></i> Temporizador de Posesión 1
+                    <i class="fas fa-stopwatch"></i> Ventana Posesión 1
                 </button>
                 <button class="btn btn-success" id="possession2WindowBtn">
-                    <i class="fas fa-stopwatch"></i> Temporizador de Posesión 2
+                    <i class="fas fa-stopwatch"></i> Ventana Posesión 2
                 </button>
             </div>
         </header>
@@ -540,7 +569,7 @@
             
             <!-- Temporizador de Posesión -->
             <div class="panel">
-                <h2 class="panel-title"><i class="fas fa-stopwatch"></i> Posesión</h2>
+                <h2 class="panel-title"><i class="fas fa-stopwatch"></i> Control de Posesión</h2>
                 <div class="timer-display" id="possessionDisplay">30</div>
                 
                 <div class="timer-controls">
@@ -556,8 +585,22 @@
                 </div>
                 
                 <div class="timer-presets">
-                    <button class="timer-preset-btn active" id="preset30">30 segundos</button>
-                    <button class="timer-preset-btn" id="preset20">20 segundos</button>
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <button class="timer-preset-btn" id="preset30">30s</button>
+                            <input type="number" class="edit-time-input" id="editPreset30" min="1" max="60" value="30" style="width: 70px;">
+                            <button class="btn btn-primary" id="savePreset30" style="padding: 8px 12px;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <button class="timer-preset-btn active" id="preset20">20s</button>
+                            <input type="number" class="edit-time-input" id="editPreset20" min="1" max="60" value="20" style="width: 70px;">
+                            <button class="btn btn-primary" id="savePreset20" style="padding: 8px 12px;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div style="margin-top: 20px;">
@@ -567,6 +610,13 @@
                     <button class="btn btn-primary" id="setPossessionTime" style="margin-left: 10px;">
                         <i class="fas fa-check"></i> Aplicar
                     </button>
+                </div>
+                
+                <div class="timer-sync-control">
+                    <label class="sync-label">
+                        <input type="checkbox" class="sync-checkbox" id="syncWithGameTimer" checked>
+                        Sincronizar con Cronómetro General
+                    </label>
                 </div>
             </div>
             
@@ -605,6 +655,13 @@
                         <i class="fas fa-check"></i> Aplicar
                     </button>
                 </div>
+                
+                <div class="timer-sync-control">
+                    <label class="sync-label">
+                        <input type="checkbox" class="sync-checkbox" id="controlFromPossession" checked>
+                        Permitir control desde Posesión
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -623,8 +680,10 @@
         let isGameTimerRunning = false;
         let currentPeriod = 1;
         let periodDuration = 8; // minutos
-        let lastPossessionUpdate = 0;
-        let lastPublicUpdate = 0;
+        let syncWithGameTimer = true;
+        let controlFromPossession = true;
+        let preset30Value = 30;
+        let preset20Value = 20;
         
         // Ventanas abiertas
         let publicViewWindow = null;
@@ -742,8 +801,8 @@
             // Temporizador de posesión
             document.getElementById('startPossessionBtn').addEventListener('click', () => {
                 startPossessionTimer();
-                // Pausar cronómetro general si está corriendo
-                if (isGameTimerRunning) {
+                // Pausar cronómetro general si está corriendo y sincronizado
+                if (syncWithGameTimer && isGameTimerRunning) {
                     pauseGameTimer();
                 }
             });
@@ -752,8 +811,28 @@
             document.getElementById('resetPossessionBtn').addEventListener('click', resetPossessionTimer);
             
             // Presets del temporizador de posesión
-            document.getElementById('preset30').addEventListener('click', () => setPossessionPreset(30));
-            document.getElementById('preset20').addEventListener('click', () => setPossessionPreset(20));
+            document.getElementById('preset30').addEventListener('click', () => setPossessionPreset(preset30Value));
+            document.getElementById('preset20').addEventListener('click', () => setPossessionPreset(preset20Value));
+            
+            // Botones para guardar presets editables
+            document.getElementById('savePreset30').addEventListener('click', () => {
+                const value = parseInt(document.getElementById('editPreset30').value);
+                if (value >= 1 && value <= 60) {
+                    preset30Value = value;
+                    saveData();
+                    updatePresetButtons();
+                }
+            });
+            
+            document.getElementById('savePreset20').addEventListener('click', () => {
+                const value = parseInt(document.getElementById('editPreset20').value);
+                if (value >= 1 && value <= 60) {
+                    preset20Value = value;
+                    saveData();
+                    updatePresetButtons();
+                }
+            });
+            
             document.getElementById('setPossessionTime').addEventListener('click', setCustomPossessionTime);
             document.getElementById('possessionCustomTime').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') setCustomPossessionTime();
@@ -762,8 +841,8 @@
             // Cronómetro general
             document.getElementById('startGameTimerBtn').addEventListener('click', () => {
                 startGameTimer();
-                // Pausar posesión si está corriendo
-                if (isPossessionRunning) {
+                // Pausar posesión si está corriendo y sincronizado
+                if (syncWithGameTimer && isPossessionRunning) {
                     pausePossessionTimer();
                 }
             });
@@ -778,6 +857,17 @@
             // Periodos
             document.getElementById('prevPeriodBtn').addEventListener('click', prevPeriod);
             document.getElementById('nextPeriodBtn').addEventListener('click', nextPeriod);
+            
+            // Sincronización
+            document.getElementById('syncWithGameTimer').addEventListener('change', function() {
+                syncWithGameTimer = this.checked;
+                saveData();
+            });
+            
+            document.getElementById('controlFromPossession').addEventListener('change', function() {
+                controlFromPossession = this.checked;
+                saveData();
+            });
             
             // Botones de control
             document.getElementById('publicViewBtn').addEventListener('click', openPublicView);
@@ -803,15 +893,9 @@
             
             // Sincronizar periódicamente pero con control de frecuencia
             setInterval(() => {
-                const now = Date.now();
-                // Solo sincronizar cada 500ms para evitar sobrecarga
-                if (now - lastPublicUpdate > 500) {
-                    broadcastData();
-                }
-                if (now - lastPossessionUpdate > 500) {
-                    broadcastPossessionTimer(parseInt(possessionDisplayEl.textContent), isPossessionRunning);
-                }
-            }, 100);
+                broadcastData();
+                broadcastPossessionTimer(parseInt(possessionDisplayEl.textContent), isPossessionRunning);
+            }, 500);
         }
 
         // Actualizar marcadores
@@ -845,6 +929,26 @@
             
             if (visitorTimeoutsUsed >= 1) visitorTimeout1.classList.add('timeout-used');
             if (visitorTimeoutsUsed >= 2) visitorTimeout2.classList.add('timeout-used');
+        }
+
+        // Actualizar botones de preset
+        function updatePresetButtons() {
+            document.getElementById('editPreset30').value = preset30Value;
+            document.getElementById('editPreset20').value = preset20Value;
+            
+            // Actualizar texto de botones
+            document.getElementById('preset30').textContent = preset30Value + 's';
+            document.getElementById('preset20').textContent = preset20Value + 's';
+            
+            // Marcar como activo el preset actual
+            document.getElementById('preset30').classList.remove('active');
+            document.getElementById('preset20').classList.remove('active');
+            
+            if (possessionTime === preset30Value) {
+                document.getElementById('preset30').classList.add('active');
+            } else if (possessionTime === preset20Value) {
+                document.getElementById('preset20').classList.add('active');
+            }
         }
 
         // Temporizador de posesión
@@ -882,19 +986,19 @@
                     
                     // Reproducir sonido de alarma
                     playBeepSound();
+                    
+                    // Si está sincronizado, reanudar el cronómetro general
+                    if (syncWithGameTimer && controlFromPossession && !isGameTimerRunning) {
+                        startGameTimer();
+                    }
                 }
                 
-                // Sincronizar con ventanas de posesión (controlado por frecuencia)
-                const nowTime = Date.now();
-                if (nowTime - lastPossessionUpdate > 100) {
-                    broadcastPossessionTimer(seconds, isPossessionRunning);
-                    lastPossessionUpdate = nowTime;
-                }
+                // Sincronizar con ventanas de posesión
+                broadcastPossessionTimer(seconds, isPossessionRunning);
             }, 100);
             
             // Sincronizar inicio
             broadcastPossessionTimer(possessionTime, true);
-            lastPossessionUpdate = Date.now();
         }
 
         function pausePossessionTimer() {
@@ -907,7 +1011,6 @@
             
             // Sincronizar pausa
             broadcastPossessionTimer(parseInt(possessionDisplayEl.textContent), false);
-            lastPossessionUpdate = Date.now();
         }
 
         function resetPossessionTimer() {
@@ -920,7 +1023,6 @@
             
             // Sincronizar reinicio
             broadcastPossessionTimer(possessionTime, false);
-            lastPossessionUpdate = Date.now();
         }
 
         function setPossessionPreset(seconds) {
@@ -928,13 +1030,7 @@
             document.getElementById('possessionCustomTime').value = seconds;
             
             // Actualizar botones activos
-            if (seconds === 30) {
-                document.getElementById('preset30').classList.add('active');
-                document.getElementById('preset20').classList.remove('active');
-            } else {
-                document.getElementById('preset30').classList.remove('active');
-                document.getElementById('preset20').classList.add('active');
-            }
+            updatePresetButtons();
             
             resetPossessionTimer();
             saveData();
@@ -974,6 +1070,7 @@
                 const minutes = Math.floor(remaining / 60000);
                 const seconds = Math.floor((remaining % 60000) / 1000);
                 
+                // Corregido: usar textContent en lugar de innerHTML para evitar [HTMLDivElement]
                 gameTimerDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                 
                 // Cuando llegue a cero
@@ -986,18 +1083,7 @@
                     // Reproducir sonido de alarma
                     playBeepSound();
                 }
-                
-                // Sincronizar con vista pública (controlado por frecuencia)
-                const nowTime = Date.now();
-                if (nowTime - lastPublicUpdate > 500) {
-                    broadcastData();
-                    lastPublicUpdate = nowTime;
-                }
             }, 100);
-            
-            // Sincronizar inicio
-            broadcastData();
-            lastPublicUpdate = Date.now();
         }
 
         function pauseGameTimer() {
@@ -1013,10 +1099,6 @@
             isGameTimerRunning = false;
             document.getElementById('startGameTimerBtn').disabled = false;
             document.getElementById('pauseGameTimerBtn').disabled = true;
-            
-            // Sincronizar pausa
-            broadcastData();
-            lastPublicUpdate = Date.now();
         }
 
         function resetGameTimer() {
@@ -1028,10 +1110,6 @@
             // Restablecer al tiempo del periodo
             gameTimerTime = periodDuration * 60;
             updateGameTimerDisplay();
-            
-            // Sincronizar reinicio
-            broadcastData();
-            lastPublicUpdate = Date.now();
         }
 
         function setGameTimerDuration() {
@@ -1042,7 +1120,6 @@
                 updateGameTimerDisplay();
                 saveData();
                 broadcastData();
-                lastPublicUpdate = Date.now();
             } else {
                 alert('Por favor, introduce un valor entre 1 y 20 minutos.');
                 document.getElementById('periodDuration').value = periodDuration;
@@ -1052,6 +1129,7 @@
         function updateGameTimerDisplay() {
             const minutes = Math.floor(gameTimerTime / 60);
             const seconds = gameTimerTime % 60;
+            // Corregido: usar textContent en lugar de innerHTML
             gameTimerDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
@@ -1062,7 +1140,6 @@
                 updatePeriodDisplay();
                 saveData();
                 broadcastData();
-                lastPublicUpdate = Date.now();
             }
         }
 
@@ -1072,7 +1149,6 @@
                 updatePeriodDisplay();
                 saveData();
                 broadcastData();
-                lastPublicUpdate = Date.now();
             }
         }
 
@@ -1302,19 +1378,6 @@
                         </div>
                         
                         <script>
-                            // Inicializar datos para evitar null
-                            let publicData = {
-                                localScore: 0,
-                                visitorScore: 0,
-                                localName: "LOCAL",
-                                visitorName: "VISITANTE",
-                                localTimeoutsUsed: 0,
-                                visitorTimeoutsUsed: 0,
-                                gameTimerDisplay: "08:00",
-                                periodDisplay: "PERIODO 1",
-                                possessionDisplay: "30"
-                            };
-                            
                             // Función para actualizar la vista pública con datos
                             function updatePublicView(data) {
                                 // Verificar que los datos no sean null
@@ -1322,22 +1385,18 @@
                                 
                                 if (data.localScore !== undefined && data.localScore !== null) {
                                     document.getElementById('publicLocalScore').textContent = data.localScore;
-                                    publicData.localScore = data.localScore;
                                 }
                                 
                                 if (data.visitorScore !== undefined && data.visitorScore !== null) {
                                     document.getElementById('publicVisitorScore').textContent = data.visitorScore;
-                                    publicData.visitorScore = data.visitorScore;
                                 }
                                 
                                 if (data.localName !== undefined && data.localName !== null) {
                                     document.getElementById('publicLocalName').textContent = data.localName;
-                                    publicData.localName = data.localName;
                                 }
                                 
                                 if (data.visitorName !== undefined && data.visitorName !== null) {
                                     document.getElementById('publicVisitorName').textContent = data.visitorName;
-                                    publicData.visitorName = data.visitorName;
                                 }
                                 
                                 if (data.localLogo !== undefined && data.localLogo !== null) {
@@ -1356,7 +1415,6 @@
                                             dot.classList.add('timeout-used');
                                         }
                                     });
-                                    publicData.localTimeoutsUsed = data.localTimeoutsUsed;
                                 }
                                 
                                 if (data.visitorTimeoutsUsed !== undefined && data.visitorTimeoutsUsed !== null) {
@@ -1367,24 +1425,20 @@
                                             dot.classList.add('timeout-used');
                                         }
                                     });
-                                    publicData.visitorTimeoutsUsed = data.visitorTimeoutsUsed;
                                 }
                                 
                                 if (data.gameTimerDisplay !== undefined && data.gameTimerDisplay !== null) {
                                     document.getElementById('publicGameTimer').textContent = data.gameTimerDisplay;
-                                    publicData.gameTimerDisplay = data.gameTimerDisplay;
                                 }
                                 
                                 if (data.periodDisplay !== undefined && data.periodDisplay !== null) {
                                     document.getElementById('publicPeriod').textContent = data.periodDisplay;
-                                    publicData.periodDisplay = data.periodDisplay;
                                 }
                                 
                                 if (data.possessionDisplay !== undefined && data.possessionDisplay !== null) {
                                     const possessionValue = parseInt(data.possessionDisplay);
                                     if (!isNaN(possessionValue)) {
                                         document.getElementById('publicPossessionTimer').textContent = data.possessionDisplay;
-                                        publicData.possessionDisplay = data.possessionDisplay;
                                         // Cambiar color cuando queden 5 segundos o menos
                                         if (possessionValue <= 5) {
                                             document.getElementById('publicPossessionTimer').style.color = '#ff6b6b';
@@ -1415,10 +1469,7 @@
                                     updatePublicView(data);
                                 } catch(error) {
                                     console.log('Error al cargar datos iniciales:', error);
-                                    updatePublicView(publicData);
                                 }
-                            } else {
-                                updatePublicView(publicData);
                             }
                         <\/script>
                     </body>
@@ -1444,7 +1495,11 @@
                 return;
             }
             
-            targetWindow = window.open('', `PossessionWindow${num}`, `width=400,height=300,left=${100 + (num-1)*420},top=100`);
+            const windowWidth = 500;
+            const windowHeight = 400;
+            const leftPosition = 100 + (num - 1) * (windowWidth + 20);
+            
+            targetWindow = window.open('', `PossessionWindow${num}`, `width=${windowWidth},height=${windowHeight},left=${leftPosition},top=100`);
             
             if (targetWindow) {
                 if (num === 1) possession1Window = targetWindow;
@@ -1457,47 +1512,130 @@
                         <title>Temporizador de Posesión ${num}</title>
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
                         <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            }
+                            
                             body {
                                 background: linear-gradient(135deg, #0a2463 0%, #1a3d7a 100%);
                                 color: white;
-                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                height: 100vh;
                                 display: flex;
                                 flex-direction: column;
                                 align-items: center;
                                 justify-content: center;
-                                height: 100vh;
-                                margin: 0;
                                 padding: 20px;
                                 text-align: center;
                             }
                             
                             .title {
-                                font-size: 2rem;
+                                font-size: 2.5rem;
                                 margin-bottom: 20px;
                                 color: #ffd166;
                             }
                             
+                            .timer-container {
+                                margin: 30px 0;
+                            }
+                            
                             .timer {
-                                font-size: 6rem;
+                                font-size: 8rem;
                                 font-weight: 800;
                                 color: #4ecdc4;
-                                margin: 20px 0;
                                 text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
                                 font-family: 'Courier New', monospace;
-                                min-height: 100px;
+                                min-height: 120px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
                             }
                             
                             .status {
-                                font-size: 1.2rem;
+                                font-size: 1.5rem;
                                 margin-top: 20px;
-                                color: rgba(255, 255, 255, 0.8);
-                                padding: 10px 20px;
+                                color: rgba(255, 255, 255, 0.9);
+                                padding: 10px 30px;
                                 background-color: rgba(0, 0, 0, 0.3);
-                                border-radius: 10px;
+                                border-radius: 50px;
+                                display: inline-block;
+                            }
+                            
+                            .controls {
+                                display: flex;
+                                gap: 15px;
+                                margin-top: 30px;
+                                flex-wrap: wrap;
+                                justify-content: center;
+                            }
+                            
+                            .btn {
+                                padding: 12px 24px;
+                                border: none;
+                                border-radius: 50px;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            }
+                            
+                            .btn-primary {
+                                background-color: #3e92cc;
+                                color: white;
+                            }
+                            
+                            .btn-primary:hover {
+                                background-color: #2a7db5;
+                                transform: translateY(-3px);
+                            }
+                            
+                            .btn-secondary {
+                                background-color: #ff6b6b;
+                                color: white;
+                            }
+                            
+                            .btn-secondary:hover {
+                                background-color: #ff5252;
+                                transform: translateY(-3px);
+                            }
+                            
+                            .btn-success {
+                                background-color: #4ecdc4;
+                                color: white;
+                            }
+                            
+                            .btn-success:hover {
+                                background-color: #3db8af;
+                                transform: translateY(-3px);
+                            }
+                            
+                            .game-timer-container {
+                                margin-top: 30px;
+                                padding: 20px;
+                                background-color: rgba(255, 255, 255, 0.1);
+                                border-radius: 15px;
+                                width: 100%;
+                                max-width: 400px;
+                            }
+                            
+                            .game-timer-title {
+                                font-size: 1.3rem;
+                                margin-bottom: 10px;
+                                color: #ffd166;
+                            }
+                            
+                            .game-timer {
+                                font-size: 2.5rem;
+                                font-weight: 800;
+                                color: #ffd166;
+                                font-family: 'Courier New', monospace;
                             }
                             
                             .footer {
@@ -1505,21 +1643,45 @@
                                 bottom: 15px;
                                 font-size: 0.9rem;
                                 color: rgba(255, 255, 255, 0.6);
+                                text-align: center;
+                                width: 100%;
                             }
                         </style>
                     </head>
                     <body>
                         <div class="title">TIEMPO DE POSESIÓN ${num}</div>
-                        <div class="timer" id="possessionTimer">${possessionTime}</div>
-                        <div class="status" id="possessionStatus">DETENIDO</div>
-                        <div class="footer">Sincronizado con el panel de control</div>
+                        
+                        <div class="timer-container">
+                            <div class="timer" id="possessionTimer">${possessionTime}</div>
+                            <div class="status" id="possessionStatus">DETENIDO</div>
+                        </div>
+                        
+                        <div class="controls">
+                            <button class="btn btn-primary" id="startBtn">
+                                <i class="fas fa-play"></i> Iniciar
+                            </button>
+                            <button class="btn btn-secondary" id="pauseBtn">
+                                <i class="fas fa-pause"></i> Pausar
+                            </button>
+                            <button class="btn btn-success" id="resetBtn">
+                                <i class="fas fa-redo"></i> Reiniciar
+                            </button>
+                        </div>
+                        
+                        <div class="game-timer-container">
+                            <div class="game-timer-title">CRONÓMETRO GENERAL</div>
+                            <div class="game-timer" id="gameTimer">08:00</div>
+                        </div>
+                        
+                        <div class="footer">
+                            Sincronizado con el panel de control - Ventana ${num}
+                        </div>
                         
                         <script>
-                            // Inicializar datos para evitar null
-                            let possessionData = {
-                                seconds: ${possessionTime},
-                                isRunning: false
-                            };
+                            // Variables locales
+                            let localPossessionTime = ${possessionTime};
+                            let localIsPossessionRunning = false;
+                            let localGameTimer = "08:00";
                             
                             // Actualizar el temporizador
                             function updatePossessionTimer(seconds, isRunning) {
@@ -1530,7 +1692,7 @@
                                 const statusEl = document.getElementById('possessionStatus');
                                 
                                 timerEl.textContent = seconds;
-                                possessionData.seconds = seconds;
+                                localPossessionTime = seconds;
                                 
                                 // Cambiar color cuando queden 5 segundos o menos
                                 if (seconds <= 5) {
@@ -1543,9 +1705,56 @@
                                 if (isRunning !== undefined && isRunning !== null) {
                                     statusEl.textContent = isRunning ? 'EN MARCHA' : 'DETENIDO';
                                     statusEl.style.backgroundColor = isRunning ? 'rgba(78, 205, 196, 0.3)' : 'rgba(255, 107, 107, 0.3)';
-                                    possessionData.isRunning = isRunning;
+                                    localIsPossessionRunning = isRunning;
+                                    
+                                    // Actualizar estado de botones
+                                    document.getElementById('startBtn').disabled = isRunning;
+                                    document.getElementById('pauseBtn').disabled = !isRunning;
                                 }
                             }
+                            
+                            // Actualizar cronómetro general
+                            function updateGameTimer(display) {
+                                if (display !== undefined && display !== null) {
+                                    document.getElementById('gameTimer').textContent = display;
+                                    localGameTimer = display;
+                                }
+                            }
+                            
+                            // Controlar el temporizador desde esta ventana
+                            function controlPossession(action) {
+                                // Enviar mensaje al panel de control
+                                const message = {
+                                    type: 'control_possession',
+                                    action: action,
+                                    windowId: ${num}
+                                };
+                                localStorage.setItem('waterpolo_control_message', JSON.stringify(message));
+                                
+                                // También intentar enviar directamente si la ventana está abierta
+                                if (window.opener && !window.opener.closed) {
+                                    try {
+                                        switch(action) {
+                                            case 'start':
+                                                window.opener.startPossessionTimer();
+                                                break;
+                                            case 'pause':
+                                                window.opener.pausePossessionTimer();
+                                                break;
+                                            case 'reset':
+                                                window.opener.resetPossessionTimer();
+                                                break;
+                                        }
+                                    } catch(e) {
+                                        // Fallback al localStorage
+                                    }
+                                }
+                            }
+                            
+                            // Configurar event listeners
+                            document.getElementById('startBtn').addEventListener('click', () => controlPossession('start'));
+                            document.getElementById('pauseBtn').addEventListener('click', () => controlPossession('pause'));
+                            document.getElementById('resetBtn').addEventListener('click', () => controlPossession('reset'));
                             
                             // Escuchar mensajes del panel de control
                             window.addEventListener('storage', function(e) {
@@ -1557,20 +1766,49 @@
                                         console.log('Error al parsear datos del temporizador:', error);
                                     }
                                 }
+                                
+                                if (e.key === 'waterpolo_public_data' && e.newValue) {
+                                    try {
+                                        const data = JSON.parse(e.newValue);
+                                        updateGameTimer(data.gameTimerDisplay);
+                                    } catch(error) {
+                                        console.log('Error al parsear datos del cronómetro:', error);
+                                    }
+                                }
+                                
+                                if (e.key === 'waterpolo_control_message' && e.newValue) {
+                                    // Ignorar mensajes propios
+                                    try {
+                                        const message = JSON.parse(e.newValue);
+                                        if (message.windowId !== ${num}) {
+                                            // Procesar mensaje de otra ventana
+                                        }
+                                    } catch(error) {
+                                        console.log('Error al parsear mensaje de control:', error);
+                                    }
+                                }
                             });
                             
                             // Cargar estado inicial
-                            const initialData = localStorage.getItem('waterpolo_possession');
-                            if (initialData) {
+                            const initialPossessionData = localStorage.getItem('waterpolo_possession');
+                            const initialPublicData = localStorage.getItem('waterpolo_public_data');
+                            
+                            if (initialPossessionData) {
                                 try {
-                                    const data = JSON.parse(initialData);
+                                    const data = JSON.parse(initialPossessionData);
                                     updatePossessionTimer(data.seconds, data.isRunning);
                                 } catch(error) {
                                     console.log('Error al cargar datos iniciales:', error);
-                                    updatePossessionTimer(possessionData.seconds, possessionData.isRunning);
                                 }
-                            } else {
-                                updatePossessionTimer(possessionData.seconds, possessionData.isRunning);
+                            }
+                            
+                            if (initialPublicData) {
+                                try {
+                                    const data = JSON.parse(initialPublicData);
+                                    updateGameTimer(data.gameTimerDisplay);
+                                } catch(error) {
+                                    console.log('Error al cargar datos del cronómetro:', error);
+                                }
                             }
                         <\/script>
                     </body>
@@ -1581,7 +1819,10 @@
                 targetWindow.document.close();
                 
                 // Enviar datos iniciales
-                setTimeout(() => broadcastPossessionTimer(possessionTime, isPossessionRunning), 500);
+                setTimeout(() => {
+                    broadcastPossessionTimer(possessionTime, isPossessionRunning);
+                    broadcastData();
+                }, 500);
             } else {
                 alert('Por favor, permite ventanas emergentes para esta función.');
             }
@@ -1605,7 +1846,6 @@
             
             try {
                 localStorage.setItem('waterpolo_public_data', JSON.stringify(data));
-                lastPublicUpdate = Date.now();
             } catch(e) {
                 console.log('Error al guardar en localStorage:', e);
             }
@@ -1616,7 +1856,6 @@
             const data = { seconds, isRunning };
             try {
                 localStorage.setItem('waterpolo_possession', JSON.stringify(data));
-                lastPossessionUpdate = Date.now();
             } catch(e) {
                 console.log('Error al guardar temporizador en localStorage:', e);
             }
@@ -1624,18 +1863,25 @@
 
         // Manejar cambios en localStorage
         function handleStorageChange(e) {
-            // Solo manejar cambios si son de otras pestañas
-            if (e.key === 'waterpolo_public_data' && e.newValue) {
+            if (e.key === 'waterpolo_control_message' && e.newValue) {
                 try {
-                    // Los datos ya están actualizados en la ventana principal
+                    const message = JSON.parse(e.newValue);
+                    if (message.type === 'control_possession') {
+                        // Ejecutar acción solicitada
+                        switch(message.action) {
+                            case 'start':
+                                startPossessionTimer();
+                                break;
+                            case 'pause':
+                                pausePossessionTimer();
+                                break;
+                            case 'reset':
+                                resetPossessionTimer();
+                                break;
+                        }
+                    }
                 } catch(error) {
-                    console.log('Error al procesar datos de almacenamiento:', error);
-                }
-            } else if (e.key === 'waterpolo_possession' && e.newValue) {
-                try {
-                    // Los datos del temporizador ya están actualizados
-                } catch(error) {
-                    console.log('Error al procesar datos del temporizador:', error);
+                    console.log('Error al procesar mensaje de control:', error);
                 }
             }
         }
@@ -1733,6 +1979,10 @@
                 isGameTimerRunning,
                 currentPeriod,
                 periodDuration,
+                syncWithGameTimer,
+                controlFromPossession,
+                preset30Value,
+                preset20Value,
                 localName: document.getElementById('localName').textContent,
                 visitorName: document.getElementById('visitorName').textContent,
                 localLogo: document.getElementById('localLogo').innerHTML,
@@ -1767,6 +2017,10 @@
                     isGameTimerRunning = data.isGameTimerRunning || false;
                     currentPeriod = data.currentPeriod || 1;
                     periodDuration = data.periodDuration || 8;
+                    syncWithGameTimer = data.syncWithGameTimer !== undefined ? data.syncWithGameTimer : true;
+                    controlFromPossession = data.controlFromPossession !== undefined ? data.controlFromPossession : true;
+                    preset30Value = data.preset30Value || 30;
+                    preset20Value = data.preset20Value || 20;
                     
                     if (data.localName) {
                         document.getElementById('localName').textContent = data.localName;
@@ -1800,18 +2054,12 @@
                         document.getElementById('visitorLogoInput').value = data.visitorLogoInput;
                     }
                     
-                    // Actualizar botones de preset
-                    if (possessionTime === 30) {
-                        document.getElementById('preset30').classList.add('active');
-                        document.getElementById('preset20').classList.remove('active');
-                    } else if (possessionTime === 20) {
-                        document.getElementById('preset30').classList.remove('active');
-                        document.getElementById('preset20').classList.add('active');
-                    } else {
-                        document.getElementById('preset30').classList.remove('active');
-                        document.getElementById('preset20').classList.remove('active');
-                    }
+                    // Actualizar controles de sincronización
+                    document.getElementById('syncWithGameTimer').checked = syncWithGameTimer;
+                    document.getElementById('controlFromPossession').checked = controlFromPossession;
                     
+                    // Actualizar presets
+                    updatePresetButtons();
                     document.getElementById('possessionCustomTime').value = possessionTime;
                     document.getElementById('periodDuration').value = periodDuration;
                     

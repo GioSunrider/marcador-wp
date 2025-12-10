@@ -393,6 +393,14 @@
             border-radius: 50px;
         }
         
+        .window-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            align-items: center;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -425,11 +433,16 @@
                 <button class="btn btn-primary" id="publicViewBtn">
                     <i class="fas fa-tv"></i> Abrir Vista Pública
                 </button>
-                <button class="btn btn-primary" id="possessionWindowBtn">
-                    <i class="fas fa-stopwatch"></i> Abrir Temporizador de Posesión
-                </button>
                 <button class="btn btn-warning" id="resetAllBtn">
                     <i class="fas fa-redo"></i> Reiniciar Todo
+                </button>
+            </div>
+            <div class="window-controls">
+                <button class="btn btn-success" id="possession1WindowBtn">
+                    <i class="fas fa-stopwatch"></i> Temporizador de Posesión 1
+                </button>
+                <button class="btn btn-success" id="possession2WindowBtn">
+                    <i class="fas fa-stopwatch"></i> Temporizador de Posesión 2
                 </button>
             </div>
         </header>
@@ -610,10 +623,13 @@
         let isGameTimerRunning = false;
         let currentPeriod = 1;
         let periodDuration = 8; // minutos
+        let lastPossessionUpdate = 0;
+        let lastPublicUpdate = 0;
         
         // Ventanas abiertas
         let publicViewWindow = null;
-        let possessionWindow = null;
+        let possession1Window = null;
+        let possession2Window = null;
 
         // Elementos del DOM
         const localScoreEl = document.getElementById('localScore');
@@ -638,6 +654,19 @@
             updatePossessionDisplay();
             updateGameTimerDisplay();
             updatePeriodDisplay();
+            
+            // Inicializar localStorage con datos válidos
+            initializeLocalStorage();
+        }
+
+        // Inicializar localStorage para evitar valores null
+        function initializeLocalStorage() {
+            if (!localStorage.getItem('waterpolo_public_data')) {
+                broadcastData();
+            }
+            if (!localStorage.getItem('waterpolo_possession')) {
+                broadcastPossessionTimer(possessionTime, false);
+            }
         }
 
         // Configurar event listeners
@@ -711,7 +740,14 @@
             });
             
             // Temporizador de posesión
-            document.getElementById('startPossessionBtn').addEventListener('click', startPossessionTimer);
+            document.getElementById('startPossessionBtn').addEventListener('click', () => {
+                startPossessionTimer();
+                // Pausar cronómetro general si está corriendo
+                if (isGameTimerRunning) {
+                    pauseGameTimer();
+                }
+            });
+            
             document.getElementById('pausePossessionBtn').addEventListener('click', pausePossessionTimer);
             document.getElementById('resetPossessionBtn').addEventListener('click', resetPossessionTimer);
             
@@ -724,7 +760,14 @@
             });
             
             // Cronómetro general
-            document.getElementById('startGameTimerBtn').addEventListener('click', startGameTimer);
+            document.getElementById('startGameTimerBtn').addEventListener('click', () => {
+                startGameTimer();
+                // Pausar posesión si está corriendo
+                if (isPossessionRunning) {
+                    pausePossessionTimer();
+                }
+            });
+            
             document.getElementById('pauseGameTimerBtn').addEventListener('click', pauseGameTimer);
             document.getElementById('resetGameTimerBtn').addEventListener('click', resetGameTimer);
             document.getElementById('setPeriodDuration').addEventListener('click', setGameTimerDuration);
@@ -738,7 +781,8 @@
             
             // Botones de control
             document.getElementById('publicViewBtn').addEventListener('click', openPublicView);
-            document.getElementById('possessionWindowBtn').addEventListener('click', openPossessionWindow);
+            document.getElementById('possession1WindowBtn').addEventListener('click', () => openPossessionWindow(1));
+            document.getElementById('possession2WindowBtn').addEventListener('click', () => openPossessionWindow(2));
             document.getElementById('resetAllBtn').addEventListener('click', resetAll);
             
             // Guardar equipos
@@ -757,8 +801,17 @@
             // Escuchar cambios en localStorage para sincronización
             window.addEventListener('storage', handleStorageChange);
             
-            // Sincronizar periódicamente
-            setInterval(broadcastData, 1000);
+            // Sincronizar periódicamente pero con control de frecuencia
+            setInterval(() => {
+                const now = Date.now();
+                // Solo sincronizar cada 500ms para evitar sobrecarga
+                if (now - lastPublicUpdate > 500) {
+                    broadcastData();
+                }
+                if (now - lastPossessionUpdate > 500) {
+                    broadcastPossessionTimer(parseInt(possessionDisplayEl.textContent), isPossessionRunning);
+                }
+            }, 100);
         }
 
         // Actualizar marcadores
@@ -805,6 +858,7 @@
             const startTime = Date.now();
             const endTime = startTime + (possessionTime * 1000);
             
+            clearInterval(possessionTimerInterval);
             possessionTimerInterval = setInterval(() => {
                 const now = Date.now();
                 const remaining = Math.max(0, endTime - now);
@@ -830,12 +884,17 @@
                     playBeepSound();
                 }
                 
-                // Sincronizar con ventana de posesión
-                broadcastPossessionTimer(seconds, isPossessionRunning);
+                // Sincronizar con ventanas de posesión (controlado por frecuencia)
+                const nowTime = Date.now();
+                if (nowTime - lastPossessionUpdate > 100) {
+                    broadcastPossessionTimer(seconds, isPossessionRunning);
+                    lastPossessionUpdate = nowTime;
+                }
             }, 100);
             
             // Sincronizar inicio
             broadcastPossessionTimer(possessionTime, true);
+            lastPossessionUpdate = Date.now();
         }
 
         function pausePossessionTimer() {
@@ -848,6 +907,7 @@
             
             // Sincronizar pausa
             broadcastPossessionTimer(parseInt(possessionDisplayEl.textContent), false);
+            lastPossessionUpdate = Date.now();
         }
 
         function resetPossessionTimer() {
@@ -860,6 +920,7 @@
             
             // Sincronizar reinicio
             broadcastPossessionTimer(possessionTime, false);
+            lastPossessionUpdate = Date.now();
         }
 
         function setPossessionPreset(seconds) {
@@ -905,6 +966,7 @@
             const startTime = Date.now();
             const endTime = startTime + (gameTimerTime * 1000);
             
+            clearInterval(gameTimerInterval);
             gameTimerInterval = setInterval(() => {
                 const now = Date.now();
                 const remaining = Math.max(0, endTime - now);
@@ -924,7 +986,18 @@
                     // Reproducir sonido de alarma
                     playBeepSound();
                 }
+                
+                // Sincronizar con vista pública (controlado por frecuencia)
+                const nowTime = Date.now();
+                if (nowTime - lastPublicUpdate > 500) {
+                    broadcastData();
+                    lastPublicUpdate = nowTime;
+                }
             }, 100);
+            
+            // Sincronizar inicio
+            broadcastData();
+            lastPublicUpdate = Date.now();
         }
 
         function pauseGameTimer() {
@@ -940,6 +1013,10 @@
             isGameTimerRunning = false;
             document.getElementById('startGameTimerBtn').disabled = false;
             document.getElementById('pauseGameTimerBtn').disabled = true;
+            
+            // Sincronizar pausa
+            broadcastData();
+            lastPublicUpdate = Date.now();
         }
 
         function resetGameTimer() {
@@ -951,6 +1028,10 @@
             // Restablecer al tiempo del periodo
             gameTimerTime = periodDuration * 60;
             updateGameTimerDisplay();
+            
+            // Sincronizar reinicio
+            broadcastData();
+            lastPublicUpdate = Date.now();
         }
 
         function setGameTimerDuration() {
@@ -961,6 +1042,7 @@
                 updateGameTimerDisplay();
                 saveData();
                 broadcastData();
+                lastPublicUpdate = Date.now();
             } else {
                 alert('Por favor, introduce un valor entre 1 y 20 minutos.');
                 document.getElementById('periodDuration').value = periodDuration;
@@ -980,6 +1062,7 @@
                 updatePeriodDisplay();
                 saveData();
                 broadcastData();
+                lastPublicUpdate = Date.now();
             }
         }
 
@@ -989,6 +1072,7 @@
                 updatePeriodDisplay();
                 saveData();
                 broadcastData();
+                lastPublicUpdate = Date.now();
             }
         }
 
@@ -1218,33 +1302,53 @@
                         </div>
                         
                         <script>
+                            // Inicializar datos para evitar null
+                            let publicData = {
+                                localScore: 0,
+                                visitorScore: 0,
+                                localName: "LOCAL",
+                                visitorName: "VISITANTE",
+                                localTimeoutsUsed: 0,
+                                visitorTimeoutsUsed: 0,
+                                gameTimerDisplay: "08:00",
+                                periodDisplay: "PERIODO 1",
+                                possessionDisplay: "30"
+                            };
+                            
                             // Función para actualizar la vista pública con datos
                             function updatePublicView(data) {
-                                if (data.localScore !== undefined) {
+                                // Verificar que los datos no sean null
+                                if (!data) return;
+                                
+                                if (data.localScore !== undefined && data.localScore !== null) {
                                     document.getElementById('publicLocalScore').textContent = data.localScore;
+                                    publicData.localScore = data.localScore;
                                 }
                                 
-                                if (data.visitorScore !== undefined) {
+                                if (data.visitorScore !== undefined && data.visitorScore !== null) {
                                     document.getElementById('publicVisitorScore').textContent = data.visitorScore;
+                                    publicData.visitorScore = data.visitorScore;
                                 }
                                 
-                                if (data.localName !== undefined) {
+                                if (data.localName !== undefined && data.localName !== null) {
                                     document.getElementById('publicLocalName').textContent = data.localName;
+                                    publicData.localName = data.localName;
                                 }
                                 
-                                if (data.visitorName !== undefined) {
+                                if (data.visitorName !== undefined && data.visitorName !== null) {
                                     document.getElementById('publicVisitorName').textContent = data.visitorName;
+                                    publicData.visitorName = data.visitorName;
                                 }
                                 
-                                if (data.localLogo !== undefined) {
+                                if (data.localLogo !== undefined && data.localLogo !== null) {
                                     document.getElementById('publicLocalLogo').innerHTML = data.localLogo;
                                 }
                                 
-                                if (data.visitorLogo !== undefined) {
+                                if (data.visitorLogo !== undefined && data.visitorLogo !== null) {
                                     document.getElementById('publicVisitorLogo').innerHTML = data.visitorLogo;
                                 }
                                 
-                                if (data.localTimeoutsUsed !== undefined) {
+                                if (data.localTimeoutsUsed !== undefined && data.localTimeoutsUsed !== null) {
                                     const timeouts = document.querySelectorAll('#publicLocalTimeouts .timeout-dot');
                                     timeouts.forEach((dot, index) => {
                                         dot.className = 'timeout-dot';
@@ -1252,9 +1356,10 @@
                                             dot.classList.add('timeout-used');
                                         }
                                     });
+                                    publicData.localTimeoutsUsed = data.localTimeoutsUsed;
                                 }
                                 
-                                if (data.visitorTimeoutsUsed !== undefined) {
+                                if (data.visitorTimeoutsUsed !== undefined && data.visitorTimeoutsUsed !== null) {
                                     const timeouts = document.querySelectorAll('#publicVisitorTimeouts .timeout-dot');
                                     timeouts.forEach((dot, index) => {
                                         dot.className = 'timeout-dot';
@@ -1262,23 +1367,30 @@
                                             dot.classList.add('timeout-used');
                                         }
                                     });
+                                    publicData.visitorTimeoutsUsed = data.visitorTimeoutsUsed;
                                 }
                                 
-                                if (data.gameTimerDisplay !== undefined) {
+                                if (data.gameTimerDisplay !== undefined && data.gameTimerDisplay !== null) {
                                     document.getElementById('publicGameTimer').textContent = data.gameTimerDisplay;
+                                    publicData.gameTimerDisplay = data.gameTimerDisplay;
                                 }
                                 
-                                if (data.periodDisplay !== undefined) {
+                                if (data.periodDisplay !== undefined && data.periodDisplay !== null) {
                                     document.getElementById('publicPeriod').textContent = data.periodDisplay;
+                                    publicData.periodDisplay = data.periodDisplay;
                                 }
                                 
-                                if (data.possessionDisplay !== undefined) {
-                                    document.getElementById('publicPossessionTimer').textContent = data.possessionDisplay;
-                                    // Cambiar color cuando queden 5 segundos o menos
-                                    if (parseInt(data.possessionDisplay) <= 5) {
-                                        document.getElementById('publicPossessionTimer').style.color = '#ff6b6b';
-                                    } else {
-                                        document.getElementById('publicPossessionTimer').style.color = '#4ecdc4';
+                                if (data.possessionDisplay !== undefined && data.possessionDisplay !== null) {
+                                    const possessionValue = parseInt(data.possessionDisplay);
+                                    if (!isNaN(possessionValue)) {
+                                        document.getElementById('publicPossessionTimer').textContent = data.possessionDisplay;
+                                        publicData.possessionDisplay = data.possessionDisplay;
+                                        // Cambiar color cuando queden 5 segundos o menos
+                                        if (possessionValue <= 5) {
+                                            document.getElementById('publicPossessionTimer').style.color = '#ff6b6b';
+                                        } else {
+                                            document.getElementById('publicPossessionTimer').style.color = '#4ecdc4';
+                                        }
                                     }
                                 }
                             }
@@ -1286,38 +1398,28 @@
                             // Escuchar mensajes del panel de control
                             window.addEventListener('storage', function(e) {
                                 if (e.key === 'waterpolo_public_data' && e.newValue) {
-                                    const data = JSON.parse(e.newValue);
-                                    updatePublicView(data);
+                                    try {
+                                        const data = JSON.parse(e.newValue);
+                                        updatePublicView(data);
+                                    } catch(error) {
+                                        console.log('Error al parsear datos:', error);
+                                    }
                                 }
                             });
                             
                             // Cargar datos iniciales
                             const initialData = localStorage.getItem('waterpolo_public_data');
                             if (initialData) {
-                                updatePublicView(JSON.parse(initialData));
-                            }
-                            
-                            // Actualizar desde la ventana principal periódicamente
-                            setInterval(() => {
-                                if (window.opener && !window.opener.closed) {
-                                    try {
-                                        const data = {
-                                            localScore: window.opener.localScore,
-                                            visitorScore: window.opener.visitorScore,
-                                            localName: window.opener.document.getElementById('localName').textContent,
-                                            visitorName: window.opener.document.getElementById('visitorName').textContent,
-                                            localTimeoutsUsed: window.opener.localTimeoutsUsed,
-                                            visitorTimeoutsUsed: window.opener.visitorTimeoutsUsed,
-                                            gameTimerDisplay: window.opener.document.getElementById('gameTimerDisplay').textContent,
-                                            periodDisplay: window.opener.document.getElementById('periodDisplay').textContent,
-                                            possessionDisplay: window.opener.document.getElementById('possessionDisplay').textContent
-                                        };
-                                        updatePublicView(data);
-                                    } catch(e) {
-                                        // Acceso cruzado no permitido
-                                    }
+                                try {
+                                    const data = JSON.parse(initialData);
+                                    updatePublicView(data);
+                                } catch(error) {
+                                    console.log('Error al cargar datos iniciales:', error);
+                                    updatePublicView(publicData);
                                 }
-                            }, 500);
+                            } else {
+                                updatePublicView(publicData);
+                            }
                         <\/script>
                     </body>
                     </html>
@@ -1334,20 +1436,25 @@
         }
 
         // Abrir ventana de temporizador de posesión
-        function openPossessionWindow() {
-            if (possessionWindow && !possessionWindow.closed) {
-                possessionWindow.focus();
+        function openPossessionWindow(num) {
+            let targetWindow = num === 1 ? possession1Window : possession2Window;
+            
+            if (targetWindow && !targetWindow.closed) {
+                targetWindow.focus();
                 return;
             }
             
-            possessionWindow = window.open('', 'PossessionWindow', 'width=400,height=300,left=100,top=100');
+            targetWindow = window.open('', `PossessionWindow${num}`, `width=400,height=300,left=${100 + (num-1)*420},top=100`);
             
-            if (possessionWindow) {
+            if (targetWindow) {
+                if (num === 1) possession1Window = targetWindow;
+                else possession2Window = targetWindow;
+                
                 const possessionWindowHTML = `
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>Temporizador de Posesión</title>
+                        <title>Temporizador de Posesión ${num}</title>
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <style>
@@ -1402,18 +1509,28 @@
                         </style>
                     </head>
                     <body>
-                        <div class="title">TIEMPO DE POSESIÓN</div>
+                        <div class="title">TIEMPO DE POSESIÓN ${num}</div>
                         <div class="timer" id="possessionTimer">${possessionTime}</div>
                         <div class="status" id="possessionStatus">DETENIDO</div>
                         <div class="footer">Sincronizado con el panel de control</div>
                         
                         <script>
+                            // Inicializar datos para evitar null
+                            let possessionData = {
+                                seconds: ${possessionTime},
+                                isRunning: false
+                            };
+                            
                             // Actualizar el temporizador
                             function updatePossessionTimer(seconds, isRunning) {
+                                // Verificar que los datos no sean null
+                                if (seconds === undefined || seconds === null) return;
+                                
                                 const timerEl = document.getElementById('possessionTimer');
                                 const statusEl = document.getElementById('possessionStatus');
                                 
                                 timerEl.textContent = seconds;
+                                possessionData.seconds = seconds;
                                 
                                 // Cambiar color cuando queden 5 segundos o menos
                                 if (seconds <= 5) {
@@ -1423,44 +1540,45 @@
                                 }
                                 
                                 // Actualizar estado
-                                statusEl.textContent = isRunning ? 'EN MARCHA' : 'DETENIDO';
-                                statusEl.style.backgroundColor = isRunning ? 'rgba(78, 205, 196, 0.3)' : 'rgba(255, 107, 107, 0.3)';
+                                if (isRunning !== undefined && isRunning !== null) {
+                                    statusEl.textContent = isRunning ? 'EN MARCHA' : 'DETENIDO';
+                                    statusEl.style.backgroundColor = isRunning ? 'rgba(78, 205, 196, 0.3)' : 'rgba(255, 107, 107, 0.3)';
+                                    possessionData.isRunning = isRunning;
+                                }
                             }
                             
                             // Escuchar mensajes del panel de control
                             window.addEventListener('storage', function(e) {
                                 if (e.key === 'waterpolo_possession' && e.newValue) {
-                                    const data = JSON.parse(e.newValue);
-                                    updatePossessionTimer(data.seconds, data.isRunning);
+                                    try {
+                                        const data = JSON.parse(e.newValue);
+                                        updatePossessionTimer(data.seconds, data.isRunning);
+                                    } catch(error) {
+                                        console.log('Error al parsear datos del temporizador:', error);
+                                    }
                                 }
                             });
                             
                             // Cargar estado inicial
                             const initialData = localStorage.getItem('waterpolo_possession');
                             if (initialData) {
-                                const data = JSON.parse(initialData);
-                                updatePossessionTimer(data.seconds, data.isRunning);
-                            }
-                            
-                            // Actualizar desde la ventana principal periódicamente
-                            setInterval(() => {
-                                if (window.opener && !window.opener.closed) {
-                                    try {
-                                        const seconds = parseInt(window.opener.document.getElementById('possessionDisplay').textContent);
-                                        const isRunning = window.opener.isPossessionRunning;
-                                        updatePossessionTimer(seconds, isRunning);
-                                    } catch(e) {
-                                        // Acceso cruzado no permitido
-                                    }
+                                try {
+                                    const data = JSON.parse(initialData);
+                                    updatePossessionTimer(data.seconds, data.isRunning);
+                                } catch(error) {
+                                    console.log('Error al cargar datos iniciales:', error);
+                                    updatePossessionTimer(possessionData.seconds, possessionData.isRunning);
                                 }
-                            }, 500);
+                            } else {
+                                updatePossessionTimer(possessionData.seconds, possessionData.isRunning);
+                            }
                         <\/script>
                     </body>
                     </html>
                 `;
                 
-                possessionWindow.document.write(possessionWindowHTML);
-                possessionWindow.document.close();
+                targetWindow.document.write(possessionWindowHTML);
+                targetWindow.document.close();
                 
                 // Enviar datos iniciales
                 setTimeout(() => broadcastPossessionTimer(possessionTime, isPossessionRunning), 500);
@@ -1485,21 +1603,40 @@
                 possessionDisplay: possessionDisplayEl.textContent
             };
             
-            localStorage.setItem('waterpolo_public_data', JSON.stringify(data));
+            try {
+                localStorage.setItem('waterpolo_public_data', JSON.stringify(data));
+                lastPublicUpdate = Date.now();
+            } catch(e) {
+                console.log('Error al guardar en localStorage:', e);
+            }
         }
 
         // Transmitir temporizador de posesión
         function broadcastPossessionTimer(seconds, isRunning) {
             const data = { seconds, isRunning };
-            localStorage.setItem('waterpolo_possession', JSON.stringify(data));
+            try {
+                localStorage.setItem('waterpolo_possession', JSON.stringify(data));
+                lastPossessionUpdate = Date.now();
+            } catch(e) {
+                console.log('Error al guardar temporizador en localStorage:', e);
+            }
         }
 
         // Manejar cambios en localStorage
         function handleStorageChange(e) {
+            // Solo manejar cambios si son de otras pestañas
             if (e.key === 'waterpolo_public_data' && e.newValue) {
-                // Los datos ya están actualizados en la ventana principal
+                try {
+                    // Los datos ya están actualizados en la ventana principal
+                } catch(error) {
+                    console.log('Error al procesar datos de almacenamiento:', error);
+                }
             } else if (e.key === 'waterpolo_possession' && e.newValue) {
-                // Los datos del temporizador ya están actualizados
+                try {
+                    // Los datos del temporizador ya están actualizados
+                } catch(error) {
+                    console.log('Error al procesar datos del temporizador:', error);
+                }
             }
         }
 
@@ -1519,6 +1656,7 @@
                 updateTimeouts();
                 saveData();
                 broadcastData();
+                broadcastPossessionTimer(possessionTime, false);
             }
         }
 
@@ -1605,7 +1743,11 @@
                 visitorLogoInput: document.getElementById('visitorLogoInput').value
             };
             
-            localStorage.setItem('waterpolo_control_panel', JSON.stringify(data));
+            try {
+                localStorage.setItem('waterpolo_control_panel', JSON.stringify(data));
+            } catch(e) {
+                console.log('Error al guardar datos en localStorage:', e);
+            }
         }
 
         // Cargar datos guardados
@@ -1613,72 +1755,76 @@
             const savedData = localStorage.getItem('waterpolo_control_panel');
             
             if (savedData) {
-                const data = JSON.parse(savedData);
-                
-                localScore = data.localScore || 0;
-                visitorScore = data.visitorScore || 0;
-                localTimeoutsUsed = data.localTimeoutsUsed || 0;
-                visitorTimeoutsUsed = data.visitorTimeoutsUsed || 0;
-                possessionTime = data.possessionTime || 30;
-                gameTimerTime = data.gameTimerTime || 8 * 60;
-                isGameTimerRunning = data.isGameTimerRunning || false;
-                currentPeriod = data.currentPeriod || 1;
-                periodDuration = data.periodDuration || 8;
-                
-                if (data.localName) {
-                    document.getElementById('localName').textContent = data.localName;
-                }
-                
-                if (data.visitorName) {
-                    document.getElementById('visitorName').textContent = data.visitorName;
-                }
-                
-                if (data.localLogo) {
-                    document.getElementById('localLogo').innerHTML = data.localLogo;
-                }
-                
-                if (data.visitorLogo) {
-                    document.getElementById('visitorLogo').innerHTML = data.visitorLogo;
-                }
-                
-                if (data.localNameInput) {
-                    document.getElementById('localNameInput').value = data.localNameInput;
-                }
-                
-                if (data.visitorNameInput) {
-                    document.getElementById('visitorNameInput').value = data.visitorNameInput;
-                }
-                
-                if (data.localLogoInput) {
-                    document.getElementById('localLogoInput').value = data.localLogoInput;
-                }
-                
-                if (data.visitorLogoInput) {
-                    document.getElementById('visitorLogoInput').value = data.visitorLogoInput;
-                }
-                
-                // Actualizar botones de preset
-                if (possessionTime === 30) {
-                    document.getElementById('preset30').classList.add('active');
-                    document.getElementById('preset20').classList.remove('active');
-                } else if (possessionTime === 20) {
-                    document.getElementById('preset30').classList.remove('active');
-                    document.getElementById('preset20').classList.add('active');
-                } else {
-                    document.getElementById('preset30').classList.remove('active');
-                    document.getElementById('preset20').classList.remove('active');
-                }
-                
-                document.getElementById('possessionCustomTime').value = possessionTime;
-                document.getElementById('periodDuration').value = periodDuration;
-                
-                // Actualizar estado de botones del cronómetro
-                if (isGameTimerRunning) {
-                    document.getElementById('startGameTimerBtn').disabled = true;
-                    document.getElementById('pauseGameTimerBtn').disabled = false;
-                } else {
-                    document.getElementById('startGameTimerBtn').disabled = false;
-                    document.getElementById('pauseGameTimerBtn').disabled = true;
+                try {
+                    const data = JSON.parse(savedData);
+                    
+                    localScore = data.localScore || 0;
+                    visitorScore = data.visitorScore || 0;
+                    localTimeoutsUsed = data.localTimeoutsUsed || 0;
+                    visitorTimeoutsUsed = data.visitorTimeoutsUsed || 0;
+                    possessionTime = data.possessionTime || 30;
+                    gameTimerTime = data.gameTimerTime || 8 * 60;
+                    isGameTimerRunning = data.isGameTimerRunning || false;
+                    currentPeriod = data.currentPeriod || 1;
+                    periodDuration = data.periodDuration || 8;
+                    
+                    if (data.localName) {
+                        document.getElementById('localName').textContent = data.localName;
+                    }
+                    
+                    if (data.visitorName) {
+                        document.getElementById('visitorName').textContent = data.visitorName;
+                    }
+                    
+                    if (data.localLogo) {
+                        document.getElementById('localLogo').innerHTML = data.localLogo;
+                    }
+                    
+                    if (data.visitorLogo) {
+                        document.getElementById('visitorLogo').innerHTML = data.visitorLogo;
+                    }
+                    
+                    if (data.localNameInput) {
+                        document.getElementById('localNameInput').value = data.localNameInput;
+                    }
+                    
+                    if (data.visitorNameInput) {
+                        document.getElementById('visitorNameInput').value = data.visitorNameInput;
+                    }
+                    
+                    if (data.localLogoInput) {
+                        document.getElementById('localLogoInput').value = data.localLogoInput;
+                    }
+                    
+                    if (data.visitorLogoInput) {
+                        document.getElementById('visitorLogoInput').value = data.visitorLogoInput;
+                    }
+                    
+                    // Actualizar botones de preset
+                    if (possessionTime === 30) {
+                        document.getElementById('preset30').classList.add('active');
+                        document.getElementById('preset20').classList.remove('active');
+                    } else if (possessionTime === 20) {
+                        document.getElementById('preset30').classList.remove('active');
+                        document.getElementById('preset20').classList.add('active');
+                    } else {
+                        document.getElementById('preset30').classList.remove('active');
+                        document.getElementById('preset20').classList.remove('active');
+                    }
+                    
+                    document.getElementById('possessionCustomTime').value = possessionTime;
+                    document.getElementById('periodDuration').value = periodDuration;
+                    
+                    // Actualizar estado de botones del cronómetro
+                    if (isGameTimerRunning) {
+                        document.getElementById('startGameTimerBtn').disabled = true;
+                        document.getElementById('pauseGameTimerBtn').disabled = false;
+                    } else {
+                        document.getElementById('startGameTimerBtn').disabled = false;
+                        document.getElementById('pauseGameTimerBtn').disabled = true;
+                    }
+                } catch(e) {
+                    console.log('Error al cargar datos guardados:', e);
                 }
             }
         }

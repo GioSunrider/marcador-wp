@@ -333,6 +333,12 @@
             font-size: 1rem;
         }
         
+        .edit-time-input-tiny {
+            width: 50px;
+            padding: 5px;
+            font-size: 0.9rem;
+        }
+        
         .preset-save-btn {
             padding: 6px 10px;
             border-radius: 50%;
@@ -426,6 +432,27 @@
             gap: 10px;
         }
         
+        .game-timer-edit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .time-separator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
         .unified-controls {
             display: flex;
             justify-content: center;
@@ -496,16 +523,34 @@
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-        
         .custom-time-control {
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .auto-pause-notice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(255, 107, 107, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            font-size: 0.9rem;
+        }
+        
+        .auto-pause-icon {
+            color: #ff6b6b;
+            font-size: 1rem;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
         
         @media (max-width: 768px) {
@@ -542,6 +587,11 @@
             .unified-controls {
                 flex-direction: column;
             }
+            
+            .game-timer-edit {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -549,7 +599,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-water"></i> Panel de Control - Marcador de Waterpolo</h1>
-            <p class="subtitle">Presets editables - Al hacer clic reinician la posesión automáticamente</p>
+            <p class="subtitle">Control avanzado de temporizadores - Pausa automática al terminar posesión</p>
             <div class="controls">
                 <button class="btn btn-primary" id="publicViewBtn">
                     <i class="fas fa-tv"></i> Abrir Vista Pública
@@ -568,7 +618,11 @@
             </div>
             <div class="sync-indicator">
                 <i class="fas fa-sync-alt sync-icon"></i>
-                <span>Temporizadores sincronizados - Presets editables</span>
+                <span>Temporizadores sincronizados - Pausa automática al 0</span>
+            </div>
+            <div class="auto-pause-notice">
+                <i class="fas fa-exclamation-circle auto-pause-icon"></i>
+                <span>Cuando la posesión llegue a 0, ambos temporizadores se pausarán automáticamente</span>
             </div>
         </header>
         
@@ -675,6 +729,19 @@
                             <span>Tiempo de Partido</span>
                         </div>
                         <div class="timer-display" id="gameTimerDisplay">08:00</div>
+                        
+                        <!-- Edición exacta del tiempo de partido -->
+                        <div class="game-timer-edit">
+                            <div class="time-input-group">
+                                <input type="number" class="edit-time-input edit-time-input-tiny" id="gameMinutesInput" min="0" max="99" value="8">
+                                <span class="time-separator">:</span>
+                                <input type="number" class="edit-time-input edit-time-input-tiny" id="gameSecondsInput" min="0" max="59" value="0">
+                            </div>
+                            <button class="btn btn-primary" id="setGameTimeBtn" style="padding: 8px 15px;">
+                                <i class="fas fa-check"></i> Establecer
+                            </button>
+                        </div>
+                        
                         <div class="period-control">
                             <button class="btn btn-warning" id="prevPeriodBtn">
                                 <i class="fas fa-chevron-left"></i>
@@ -725,7 +792,7 @@
                         <div class="custom-time-control">
                             <div class="setting-group">
                                 <span>Tiempo personalizado:</span>
-                                <input type="number" class="edit-time-input" id="possessionCustomTime" min="5" max="60" value="30">
+                                <input type="number" class="edit-time-input edit-time-input-small" id="possessionCustomTime" min="5" max="60" value="30">
                                 <button class="btn btn-primary" id="setCustomTimeBtn" style="padding: 8px 15px;">
                                     <i class="fas fa-check"></i> Aplicar
                                 </button>
@@ -751,7 +818,7 @@
                 <div class="timer-settings">
                     <div class="setting-group">
                         <span>Duración del periodo:</span>
-                        <input type="number" class="edit-time-input" id="periodDuration" min="1" max="20" value="8">
+                        <input type="number" class="edit-time-input edit-time-input-small" id="periodDuration" min="1" max="20" value="8">
                         <span>minutos</span>
                         <button class="btn btn-primary" id="setPeriodDuration" style="padding: 8px 15px;">
                             <i class="fas fa-check"></i> Aplicar
@@ -778,6 +845,8 @@
         let preset30Value = 30;
         let preset20Value = 20;
         let activePreset = '30'; // '30' o '20'
+        let possessionTargetTime = null; // Para guardar el tiempo objetivo de la posesión
+        let gameTargetTime = null; // Para guardar el tiempo objetivo del partido
         
         // Ventanas abiertas
         let publicViewWindow = null;
@@ -809,6 +878,7 @@
             updatePeriodDisplay();
             updatePresetButtons();
             updatePresetInputs();
+            updateGameTimeInputs();
             
             // Inicializar localStorage con datos válidos
             initializeLocalStorage();
@@ -967,10 +1037,19 @@
                 }
             });
             
-            // Tiempo personalizado
+            // Tiempo personalizado de posesión
             document.getElementById('setCustomTimeBtn').addEventListener('click', setCustomPossessionTime);
             document.getElementById('possessionCustomTime').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') setCustomPossessionTime();
+            });
+            
+            // Edición exacta del tiempo de partido
+            document.getElementById('setGameTimeBtn').addEventListener('click', setExactGameTime);
+            document.getElementById('gameMinutesInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') setExactGameTime();
+            });
+            document.getElementById('gameSecondsInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') setExactGameTime();
             });
             
             // Duración del periodo
@@ -1071,6 +1150,41 @@
             document.getElementById('possessionCustomTime').value = possessionTime;
         }
 
+        // Actualizar inputs del tiempo de partido
+        function updateGameTimeInputs() {
+            const minutes = Math.floor(gameTimerTime / 60);
+            const seconds = gameTimerTime % 60;
+            document.getElementById('gameMinutesInput').value = minutes;
+            document.getElementById('gameSecondsInput').value = seconds;
+            document.getElementById('periodDuration').value = periodDuration;
+        }
+
+        // Establecer tiempo exacto del partido
+        function setExactGameTime() {
+            const minutes = parseInt(document.getElementById('gameMinutesInput').value) || 0;
+            const seconds = parseInt(document.getElementById('gameSecondsInput').value) || 0;
+            
+            if (minutes >= 0 && minutes <= 99 && seconds >= 0 && seconds <= 59) {
+                gameTimerTime = minutes * 60 + seconds;
+                
+                // Si el temporizador está corriendo, actualizar el tiempo objetivo
+                if (isTimersRunning && gameTargetTime) {
+                    const now = Date.now();
+                    const elapsed = gameTargetTime - now;
+                    if (elapsed > 0) {
+                        gameTargetTime = now + (gameTimerTime * 1000);
+                    }
+                }
+                
+                updateGameTimerDisplay();
+                saveData();
+                broadcastTimersData();
+            } else {
+                alert('Por favor, introduce valores válidos: minutos (0-99) y segundos (0-59).');
+                updateGameTimeInputs();
+            }
+        }
+
         // Reiniciar solo la posesión (no el cronómetro general)
         function resetPossessionOnly() {
             // Solo reiniciamos el temporizador de posesión si está corriendo
@@ -1082,36 +1196,12 @@
                 possessionDisplayEl.textContent = possessionTime;
                 possessionDisplayEl.style.color = '#4ecdc4';
                 
-                // Volver a iniciar el temporizador de posesión con el nuevo tiempo
-                const possessionStartTime = Date.now();
-                const possessionEndTime = possessionStartTime + (possessionTime * 1000);
+                // Establecer nuevo tiempo objetivo
+                const now = Date.now();
+                possessionTargetTime = now + (possessionTime * 1000);
                 
-                possessionTimerInterval = setInterval(() => {
-                    const now = Date.now();
-                    const remaining = Math.max(0, possessionEndTime - now);
-                    
-                    const seconds = Math.ceil(remaining / 1000);
-                    possessionDisplayEl.textContent = seconds;
-                    
-                    // Cambiar color cuando queden 5 segundos o menos
-                    if (seconds <= 5) {
-                        possessionDisplayEl.style.color = '#ff6b6b';
-                    } else {
-                        possessionDisplayEl.style.color = '#4ecdc4';
-                    }
-                    
-                    // Cuando llegue a cero, reiniciar pero mantener corriendo
-                    if (remaining <= 0) {
-                        // Reiniciar posesión automáticamente
-                        const newEndTime = now + (possessionTime * 1000);
-                        possessionEndTime = newEndTime;
-                        possessionDisplayEl.textContent = possessionTime;
-                        possessionDisplayEl.style.color = '#4ecdc4';
-                        
-                        // Reproducir sonido de alarma
-                        playBeepSound();
-                    }
-                }, 100);
+                // Volver a iniciar el temporizador de posesión con el nuevo tiempo
+                restartPossessionTimer();
             } else {
                 // Si no está corriendo, solo actualizar el display
                 possessionDisplayEl.textContent = possessionTime;
@@ -1122,42 +1212,13 @@
             broadcastTimersData();
         }
 
-        // Controles unificados de temporizadores
-        function startAllTimers() {
-            if (isTimersRunning) return;
-            
-            isTimersRunning = true;
-            updateTimerButtonsState();
-            
-            // Iniciar temporizador de partido
-            const gameStartTime = Date.now();
-            const gameEndTime = gameStartTime + (gameTimerTime * 1000);
-            
-            clearInterval(gameTimerInterval);
-            gameTimerInterval = setInterval(() => {
-                const now = Date.now();
-                const remaining = Math.max(0, gameEndTime - now);
-                
-                const minutes = Math.floor(remaining / 60000);
-                const seconds = Math.floor((remaining % 60000) / 1000);
-                
-                gameTimerDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Cuando llegue a cero
-                if (remaining <= 0) {
-                    clearInterval(gameTimerInterval);
-                    // No detenemos el estado porque la posesión podría seguir
-                }
-            }, 100);
-            
-            // Iniciar temporizador de posesión
-            const possessionStartTime = Date.now();
-            const possessionEndTime = possessionStartTime + (possessionTime * 1000);
-            
+        // Reiniciar el temporizador de posesión (usado internamente)
+        function restartPossessionTimer() {
             clearInterval(possessionTimerInterval);
+            
             possessionTimerInterval = setInterval(() => {
                 const now = Date.now();
-                const remaining = Math.max(0, possessionEndTime - now);
+                const remaining = Math.max(0, possessionTargetTime - now);
                 
                 const seconds = Math.ceil(remaining / 1000);
                 possessionDisplayEl.textContent = seconds;
@@ -1169,18 +1230,100 @@
                     possessionDisplayEl.style.color = '#4ecdc4';
                 }
                 
-                // Cuando llegue a cero, reiniciar pero mantener corriendo
+                // Cuando llegue a cero, PAUSAR AMBOS TEMPORIZADORES
                 if (remaining <= 0) {
-                    // Reiniciar posesión automáticamente
-                    const newEndTime = now + (possessionTime * 1000);
-                    possessionEndTime = newEndTime;
-                    possessionDisplayEl.textContent = possessionTime;
-                    possessionDisplayEl.style.color = '#4ecdc4';
+                    // Pausar ambos temporizadores automáticamente
+                    pauseAllTimers();
+                    
+                    // Asegurarse de que muestra 0
+                    possessionDisplayEl.textContent = 0;
+                    possessionDisplayEl.style.color = '#ff6b6b';
                     
                     // Reproducir sonido de alarma
                     playBeepSound();
+                    
+                    // Mostrar alerta visual
+                    flashPossessionDisplay();
                 }
             }, 100);
+        }
+
+        // Efecto visual cuando la posesión llega a 0
+        function flashPossessionDisplay() {
+            let flashCount = 0;
+            const maxFlashes = 6;
+            const flashInterval = setInterval(() => {
+                if (flashCount >= maxFlashes * 2) {
+                    clearInterval(flashInterval);
+                    possessionDisplayEl.style.backgroundColor = '';
+                    return;
+                }
+                
+                if (flashCount % 2 === 0) {
+                    possessionDisplayEl.style.backgroundColor = 'rgba(255, 107, 107, 0.3)';
+                } else {
+                    possessionDisplayEl.style.backgroundColor = '';
+                }
+                
+                flashCount++;
+            }, 300);
+        }
+
+        // Controles unificados de temporizadores - NO REINICIA LA POSESIÓN AL INICIAR
+        function startAllTimers() {
+            if (isTimersRunning) return;
+            
+            isTimersRunning = true;
+            updateTimerButtonsState();
+            
+            const now = Date.now();
+            
+            // Iniciar temporizador de partido - CONTINÚA DESDE DONDE IBA
+            gameTargetTime = now + (gameTimerTime * 1000);
+            
+            clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                const currentNow = Date.now();
+                const remaining = Math.max(0, gameTargetTime - currentNow);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                gameTimerDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Cuando llegue a cero, solo detener este temporizador
+                if (remaining <= 0) {
+                    clearInterval(gameTimerInterval);
+                }
+            }, 100);
+            
+            // Iniciar temporizador de posesión - CONTINÚA DESDE DONDE IBA
+            // Si no hay tiempo objetivo establecido, establecer uno nuevo
+            if (!possessionTargetTime || possessionTargetTime <= now) {
+                possessionTargetTime = now + (possessionTime * 1000);
+            }
+            
+            // Verificar el tiempo restante actual para la posesión
+            const initialPossessionRemaining = Math.max(0, possessionTargetTime - now);
+            const initialSeconds = Math.ceil(initialPossessionRemaining / 1000);
+            
+            // Si ya está en 0, no iniciar la posesión
+            if (initialSeconds <= 0) {
+                possessionDisplayEl.textContent = 0;
+                possessionDisplayEl.style.color = '#ff6b6b';
+                // No iniciar el intervalo de posesión, ambos estarán pausados
+            } else {
+                // Iniciar el temporizador de posesión normalmente
+                restartPossessionTimer();
+                
+                // Actualizar display inicial
+                possessionDisplayEl.textContent = initialSeconds;
+                if (initialSeconds <= 5) {
+                    possessionDisplayEl.style.color = '#ff6b6b';
+                } else {
+                    possessionDisplayEl.style.color = '#4ecdc4';
+                }
+            }
             
             // Sincronizar inicio
             broadcastTimersData();
@@ -1197,6 +1340,14 @@
             const [minutes, seconds] = currentGameTime.split(':').map(Number);
             gameTimerTime = minutes * 60 + seconds;
             
+            // Guardar tiempo restante de la posesión
+            const currentPossessionTime = parseInt(possessionDisplayEl.textContent);
+            if (currentPossessionTime > 0) {
+                // Solo actualizar si no está en 0
+                const now = Date.now();
+                possessionTargetTime = now + (currentPossessionTime * 1000);
+            }
+            
             isTimersRunning = false;
             updateTimerButtonsState();
             
@@ -1210,11 +1361,14 @@
             
             isTimersRunning = false;
             gameTimerTime = periodDuration * 60;
+            possessionTargetTime = null;
             possessionDisplayEl.style.color = '#4ecdc4';
+            possessionDisplayEl.style.backgroundColor = '';
             
             updateGameTimerDisplay();
             updatePossessionDisplay();
             updateTimerButtonsState();
+            updateGameTimeInputs();
             
             // Sincronizar reinicio
             broadcastTimersData();
@@ -1258,7 +1412,10 @@
         }
 
         function updatePossessionDisplay() {
-            possessionDisplayEl.textContent = possessionTime;
+            // Solo actualizar si no está corriendo o si estamos en modo pausa
+            if (!isTimersRunning) {
+                possessionDisplayEl.textContent = possessionTime;
+            }
         }
 
         function setGameTimerDuration() {
@@ -1268,6 +1425,7 @@
                 if (!isTimersRunning) {
                     gameTimerTime = duration * 60;
                     updateGameTimerDisplay();
+                    updateGameTimeInputs();
                 }
                 saveData();
                 broadcastTimersData();
@@ -2137,6 +2295,7 @@
                     // Actualizar presets
                     updatePresetButtons();
                     updatePresetInputs();
+                    updateGameTimeInputs();
                     
                     // Actualizar estado de botones de temporizador
                     updateTimerButtonsState();

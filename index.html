@@ -110,6 +110,24 @@
             transform: translateY(-3px);
         }
         
+        .btn-preset {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .btn-preset:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .btn-preset.active {
+            background-color: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+        
         .main-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -284,24 +302,53 @@
             flex-wrap: wrap;
         }
         
-        .timer-preset-btn {
-            padding: 10px 20px;
-            border-radius: 50px;
-            border: 2px solid #4ecdc4;
-            background-color: transparent;
+        .preset-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .preset-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .edit-time-input {
+            width: 70px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #3e92cc;
+            background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .edit-time-input-small {
+            width: 60px;
+            padding: 6px;
+            font-size: 1rem;
+        }
+        
+        .preset-save-btn {
+            padding: 6px 10px;
+            border-radius: 50%;
+            border: none;
+            background-color: rgba(78, 205, 196, 0.3);
+            color: white;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
         }
         
-        .timer-preset-btn:hover {
-            background-color: #4ecdc4;
-        }
-        
-        .timer-preset-btn.active {
-            background-color: #4ecdc4;
+        .preset-save-btn:hover {
+            background-color: rgba(78, 205, 196, 0.5);
         }
         
         .edit-input {
@@ -314,17 +361,6 @@
             width: 100%;
             max-width: 300px;
             margin-bottom: 10px;
-        }
-        
-        .edit-time-input {
-            width: 80px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 2px solid #3e92cc;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 1.2rem;
-            text-align: center;
         }
         
         .edit-team-form {
@@ -466,6 +502,12 @@
             100% { opacity: 0.6; }
         }
         
+        .custom-time-control {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -507,7 +549,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-water"></i> Panel de Control - Marcador de Waterpolo</h1>
-            <p class="subtitle">Control unificado de temporizadores - Sincronizados en tiempo real</p>
+            <p class="subtitle">Presets editables - Al hacer clic reinician la posesión automáticamente</p>
             <div class="controls">
                 <button class="btn btn-primary" id="publicViewBtn">
                     <i class="fas fa-tv"></i> Abrir Vista Pública
@@ -526,7 +568,7 @@
             </div>
             <div class="sync-indicator">
                 <i class="fas fa-sync-alt sync-icon"></i>
-                <span>Temporizadores sincronizados</span>
+                <span>Temporizadores sincronizados - Presets editables</span>
             </div>
         </header>
         
@@ -651,10 +693,42 @@
                             <span>Tiempo de Posesión</span>
                         </div>
                         <div class="timer-display" id="possessionDisplay">30</div>
+                        
+                        <!-- Presets editables -->
                         <div class="timer-presets">
+                            <div class="preset-container">
+                                <button class="btn btn-preset active" id="preset30Btn">
+                                    <span id="preset30Text">30</span>s
+                                </button>
+                                <div class="preset-input-group">
+                                    <input type="number" class="edit-time-input edit-time-input-small" id="preset30Input" min="5" max="60" value="30">
+                                    <button class="preset-save-btn" id="savePreset30Btn" title="Guardar valor">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="preset-container">
+                                <button class="btn btn-preset" id="preset20Btn">
+                                    <span id="preset20Text">20</span>s
+                                </button>
+                                <div class="preset-input-group">
+                                    <input type="number" class="edit-time-input edit-time-input-small" id="preset20Input" min="5" max="60" value="20">
+                                    <button class="preset-save-btn" id="savePreset20Btn" title="Guardar valor">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tiempo personalizado -->
+                        <div class="custom-time-control">
                             <div class="setting-group">
-                                <button class="timer-preset-btn active" id="preset30">30s</button>
-                                <button class="timer-preset-btn" id="preset20">20s</button>
+                                <span>Tiempo personalizado:</span>
+                                <input type="number" class="edit-time-input" id="possessionCustomTime" min="5" max="60" value="30">
+                                <button class="btn btn-primary" id="setCustomTimeBtn" style="padding: 8px 15px;">
+                                    <i class="fas fa-check"></i> Aplicar
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -675,15 +749,6 @@
                 
                 <!-- Ajustes de Temporizadores -->
                 <div class="timer-settings">
-                    <div class="setting-group">
-                        <span>Tiempo de posesión:</span>
-                        <input type="number" class="edit-time-input" id="possessionCustomTime" min="5" max="60" value="30">
-                        <span>segundos</span>
-                        <button class="btn btn-primary" id="setPossessionTime" style="padding: 8px 15px;">
-                            <i class="fas fa-check"></i> Aplicar
-                        </button>
-                    </div>
-                    
                     <div class="setting-group">
                         <span>Duración del periodo:</span>
                         <input type="number" class="edit-time-input" id="periodDuration" min="1" max="20" value="8">
@@ -712,6 +777,7 @@
         let periodDuration = 8; // minutos
         let preset30Value = 30;
         let preset20Value = 20;
+        let activePreset = '30'; // '30' o '20'
         
         // Ventanas abiertas
         let publicViewWindow = null;
@@ -742,6 +808,7 @@
             updateGameTimerDisplay();
             updatePeriodDisplay();
             updatePresetButtons();
+            updatePresetInputs();
             
             // Inicializar localStorage con datos válidos
             initializeLocalStorage();
@@ -832,16 +899,81 @@
             document.getElementById('pauseAllBtn').addEventListener('click', pauseAllTimers);
             document.getElementById('resetAllTimersBtn').addEventListener('click', resetAllTimers);
             
-            // Presets del temporizador de posesión
-            document.getElementById('preset30').addEventListener('click', () => setPossessionPreset(preset30Value));
-            document.getElementById('preset20').addEventListener('click', () => setPossessionPreset(preset20Value));
+            // Botones de preset (al hacer clic, reinician la posesión al valor indicado)
+            document.getElementById('preset30Btn').addEventListener('click', () => {
+                // Establecer el preset 30 como activo y reiniciar posesión
+                activePreset = '30';
+                possessionTime = preset30Value;
+                updatePresetButtons();
+                resetPossessionOnly(); // Solo reinicia la posesión
+                updatePossessionDisplay();
+                saveData();
+                broadcastTimersData();
+            });
             
-            // Ajustes de tiempos
-            document.getElementById('setPossessionTime').addEventListener('click', setCustomPossessionTime);
+            document.getElementById('preset20Btn').addEventListener('click', () => {
+                // Establecer el preset 20 como activo y reiniciar posesión
+                activePreset = '20';
+                possessionTime = preset20Value;
+                updatePresetButtons();
+                resetPossessionOnly(); // Solo reinicia la posesión
+                updatePossessionDisplay();
+                saveData();
+                broadcastTimersData();
+            });
+            
+            // Botones para guardar valores editados de presets
+            document.getElementById('savePreset30Btn').addEventListener('click', () => {
+                const value = parseInt(document.getElementById('preset30Input').value);
+                if (value >= 5 && value <= 60) {
+                    preset30Value = value;
+                    document.getElementById('preset30Text').textContent = value;
+                    updatePresetInputs();
+                    
+                    // Si este preset está activo, actualizar el tiempo de posesión
+                    if (activePreset === '30') {
+                        possessionTime = value;
+                        resetPossessionOnly(); // Solo reinicia la posesión
+                        updatePossessionDisplay();
+                    }
+                    
+                    saveData();
+                    broadcastTimersData();
+                } else {
+                    alert('Por favor, introduce un valor entre 5 y 60 segundos.');
+                    document.getElementById('preset30Input').value = preset30Value;
+                }
+            });
+            
+            document.getElementById('savePreset20Btn').addEventListener('click', () => {
+                const value = parseInt(document.getElementById('preset20Input').value);
+                if (value >= 5 && value <= 60) {
+                    preset20Value = value;
+                    document.getElementById('preset20Text').textContent = value;
+                    updatePresetInputs();
+                    
+                    // Si este preset está activo, actualizar el tiempo de posesión
+                    if (activePreset === '20') {
+                        possessionTime = value;
+                        resetPossessionOnly(); // Solo reinicia la posesión
+                        updatePossessionDisplay();
+                    }
+                    
+                    saveData();
+                    broadcastTimersData();
+                } else {
+                    alert('Por favor, introduce un valor entre 5 y 60 segundos.');
+                    document.getElementById('preset20Input').value = preset20Value;
+                }
+            });
+            
+            // Tiempo personalizado
+            document.getElementById('setCustomTimeBtn').addEventListener('click', setCustomPossessionTime);
             document.getElementById('possessionCustomTime').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') setCustomPossessionTime();
             });
             
+            // Duración del periodo
             document.getElementById('setPeriodDuration').addEventListener('click', setGameTimerDuration);
             document.getElementById('periodDuration').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') setGameTimerDuration();
@@ -915,15 +1047,79 @@
 
         // Actualizar botones de preset
         function updatePresetButtons() {
-            // Marcar como activo el preset actual
-            document.getElementById('preset30').classList.remove('active');
-            document.getElementById('preset20').classList.remove('active');
+            const preset30Btn = document.getElementById('preset30Btn');
+            const preset20Btn = document.getElementById('preset20Btn');
             
-            if (possessionTime === preset30Value) {
-                document.getElementById('preset30').classList.add('active');
-            } else if (possessionTime === preset20Value) {
-                document.getElementById('preset20').classList.add('active');
+            preset30Btn.classList.remove('active');
+            preset20Btn.classList.remove('active');
+            
+            if (activePreset === '30') {
+                preset30Btn.classList.add('active');
+            } else if (activePreset === '20') {
+                preset20Btn.classList.add('active');
             }
+            
+            // Actualizar texto de los botones
+            document.getElementById('preset30Text').textContent = preset30Value;
+            document.getElementById('preset20Text').textContent = preset20Value;
+        }
+
+        // Actualizar inputs de presets
+        function updatePresetInputs() {
+            document.getElementById('preset30Input').value = preset30Value;
+            document.getElementById('preset20Input').value = preset20Value;
+            document.getElementById('possessionCustomTime').value = possessionTime;
+        }
+
+        // Reiniciar solo la posesión (no el cronómetro general)
+        function resetPossessionOnly() {
+            // Solo reiniciamos el temporizador de posesión si está corriendo
+            if (isTimersRunning) {
+                // Limpiar intervalo de posesión
+                clearInterval(possessionTimerInterval);
+                
+                // Restablecer display
+                possessionDisplayEl.textContent = possessionTime;
+                possessionDisplayEl.style.color = '#4ecdc4';
+                
+                // Volver a iniciar el temporizador de posesión con el nuevo tiempo
+                const possessionStartTime = Date.now();
+                const possessionEndTime = possessionStartTime + (possessionTime * 1000);
+                
+                possessionTimerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const remaining = Math.max(0, possessionEndTime - now);
+                    
+                    const seconds = Math.ceil(remaining / 1000);
+                    possessionDisplayEl.textContent = seconds;
+                    
+                    // Cambiar color cuando queden 5 segundos o menos
+                    if (seconds <= 5) {
+                        possessionDisplayEl.style.color = '#ff6b6b';
+                    } else {
+                        possessionDisplayEl.style.color = '#4ecdc4';
+                    }
+                    
+                    // Cuando llegue a cero, reiniciar pero mantener corriendo
+                    if (remaining <= 0) {
+                        // Reiniciar posesión automáticamente
+                        const newEndTime = now + (possessionTime * 1000);
+                        possessionEndTime = newEndTime;
+                        possessionDisplayEl.textContent = possessionTime;
+                        possessionDisplayEl.style.color = '#4ecdc4';
+                        
+                        // Reproducir sonido de alarma
+                        playBeepSound();
+                    }
+                }, 100);
+            } else {
+                // Si no está corriendo, solo actualizar el display
+                possessionDisplayEl.textContent = possessionTime;
+                possessionDisplayEl.style.color = '#4ecdc4';
+            }
+            
+            // Sincronizar cambio
+            broadcastTimersData();
         }
 
         // Controles unificados de temporizadores
@@ -1041,26 +1237,20 @@
             }
         }
 
-        function setPossessionPreset(seconds) {
-            possessionTime = seconds;
-            document.getElementById('possessionCustomTime').value = seconds;
-            
-            // Si el temporizador está corriendo, actualizar en tiempo real
-            if (isTimersRunning) {
-                // No reiniciamos, solo actualizamos el tiempo objetivo
-            } else {
-                updatePossessionDisplay();
-            }
-            
-            updatePresetButtons();
-            saveData();
-            broadcastTimersData();
-        }
-
         function setCustomPossessionTime() {
             const customTime = parseInt(document.getElementById('possessionCustomTime').value);
             if (customTime >= 5 && customTime <= 60) {
-                setPossessionPreset(customTime);
+                possessionTime = customTime;
+                updatePresetInputs();
+                
+                // No marcamos ningún preset como activo cuando usamos tiempo personalizado
+                activePreset = 'custom';
+                updatePresetButtons();
+                
+                resetPossessionOnly(); // Solo reinicia la posesión
+                updatePossessionDisplay();
+                saveData();
+                broadcastTimersData();
             } else {
                 alert('Por favor, introduce un valor entre 5 y 60 segundos.');
                 document.getElementById('possessionCustomTime').value = possessionTime;
@@ -1777,10 +1967,18 @@
                 visitorScore = 0;
                 localTimeoutsUsed = 0;
                 visitorTimeoutsUsed = 0;
-                setPossessionPreset(30);
+                
+                // Restablecer presets a valores por defecto
+                preset30Value = 30;
+                preset20Value = 20;
+                possessionTime = 30;
+                activePreset = '30';
+                
                 resetAllTimers();
                 currentPeriod = 1;
                 updatePeriodDisplay();
+                updatePresetButtons();
+                updatePresetInputs();
                 
                 updateScores();
                 updateTimeouts();
@@ -1865,6 +2063,7 @@
                 periodDuration,
                 preset30Value,
                 preset20Value,
+                activePreset,
                 localName: document.getElementById('localName').textContent,
                 visitorName: document.getElementById('visitorName').textContent,
                 localLogo: document.getElementById('localLogo').innerHTML,
@@ -1901,6 +2100,7 @@
                     periodDuration = data.periodDuration || 8;
                     preset30Value = data.preset30Value || 30;
                     preset20Value = data.preset20Value || 20;
+                    activePreset = data.activePreset || '30';
                     
                     if (data.localName) {
                         document.getElementById('localName').textContent = data.localName;
@@ -1936,8 +2136,7 @@
                     
                     // Actualizar presets
                     updatePresetButtons();
-                    document.getElementById('possessionCustomTime').value = possessionTime;
-                    document.getElementById('periodDuration').value = periodDuration;
+                    updatePresetInputs();
                     
                     // Actualizar estado de botones de temporizador
                     updateTimerButtonsState();

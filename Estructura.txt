@@ -1,0 +1,10 @@
+waterpolo-scoreboard/
+├── index.html                  # Tu archivo actual (modificado)
+├── main.js                     # Archivo principal de Electron
+├── preload.js                  # Script de pre-carga
+├── package.json                # Configuración del proyecto
+├── build/                      # Iconos para la aplicación
+│   ├── icon.ico               # Icono para Windows
+│   ├── icon.icns              # Icono para macOS
+│   └── icon.png               # Icono para Linux
+└── README.md                   # Documentación

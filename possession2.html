@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporizador de Posesión 2 - Waterpolo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a3d7a 0%, #0a2463 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .header {
+            width: 100%;
+            padding: 15px;
+            background-color: rgba(0, 30, 80, 0.8);
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 2.2rem;
+            color: #ffd166;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .main-timer-container {
+            margin: 30px 0;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 450px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .timer-label {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ffd166;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timer {
+            font-size: 6rem;
+            font-weight: 800;
+            color: #4ecdc4;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .timer.warning {
+            color: #ffd166;
+        }
+        
+        .timer.danger {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .status {
+            font-size: 1.5rem;
+            margin-top: 20px;
+            padding: 10px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            font-weight: 600;
+            min-width: 150px;
+        }
+        
+        .status-running {
+            background-color: rgba(78, 205, 196, 0.3);
+            color: #4ecdc4;
+            border: 2px solid rgba(78, 205, 196, 0.5);
+        }
+        
+        .status-paused {
+            background-color: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            border: 2px solid rgba(255, 107, 107, 0.5);
+        }
+        
+        .status-finished {
+            background-color: rgba(255, 209, 102, 0.3);
+            color: #ffd166;
+            border: 2px solid rgba(255, 209, 102, 0.5);
+            animation: flash 1s infinite;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .secondary-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        .game-timer-container, .score-container {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .game-timer-title, .score-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #ffd166;
+        }
+        
+        .game-timer {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffd166;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .score-display {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .team-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+        
+        .score-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffd166;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .controls-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .controls-info i {
+            color: #4ecdc4;
+        }
+        
+        .timeouts-display {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        
+        .timeout-dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .timeout-used {
+            background-color: #ff6b6b;
+        }
+        
+        @media (max-height: 700px) {
+            .main-timer-container {
+                padding: 20px;
+                margin: 15px 0;
+            }
+            
+            .timer {
+                font-size: 5rem;
+            }
+            
+            .secondary-info {
+                margin-top: 15px;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">
+            <i class="fas fa-stopwatch"></i>
+            <span>TEMPORIZADOR DE POSESIÓN 2</span>
+        </h1>
+    </div>
+    
+    <div class="main-timer-container">
+        <div class="timer-label">
+            <i class="fas fa-hourglass-half"></i>
+            <span>TIEMPO RESTANTE</span>
+        </div>
+        <div class="timer" id="possessionTimer">30</div>
+        <div class="status status-paused" id="possessionStatus">PAUSADO</div>
+    </div>
+    
+    <div class="secondary-info">
+        <div class="game-timer-container">
+            <div class="game-timer-title">CRONÓMETRO GENERAL</div>
+            <div class="game-timer" id="gameTimer">08:00</div>
+            <div class="status status-paused" id="gameTimerStatus">PAUSADO</div>
+        </div>
+        
+        <div class="score-container">
+            <div class="score-title">MARCADOR</div>
+            <div class="score-display">
+                <div class="team-score" id="localScoreDisplay">
+                    <span class="team-name" id="localName">LOCAL</span>
+                    <span class="score-value" id="localScore">0</span>
+                </div>
+                <div class="timeouts-display" id="localTimeouts">
+                    <div class="timeout-dot">1</div>
+                    <div class="timeout-dot">2</div>
+                </div>
+                
+                <div class="team-score" id="visitorScoreDisplay">
+                    <span class="team-name" id="visitorName">VISITANTE</span>
+                    <span class="score-value" id="visitorScore">0</span>
+                </div>
+                <div class="timeouts-display" id="visitorTimeouts">
+                    <div class="timeout-dot">1</div>
+                    <div class="timeout-dot">2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls-info">
+        <i class="fas fa-info-circle"></i>
+        <span>Este temporizador se sincroniza automáticamente con el panel de control principal</span>
+    </div>
+    
+    <div class="footer">
+        Marcador de Waterpolo - Ventana de Posesión 2 | Sincronizado en tiempo real
+    </div>
+
+    <script>
+        // Variables para sincronización
+        let currentTimers = null;
+        let currentData = null;
+        
+        // Función para actualizar el temporizador de posesión
+        function updatePossessionTimer(timersData) {
+            if (!timersData) return;
+            
+            const possessionTimer = document.getElementById('possessionTimer');
+            const possessionStatus = document.getElementById('possessionStatus');
+            
+            if (timersData.possessionDisplay !== undefined && timersData.possessionDisplay !== null) {
+                const possessionValue = parseInt(timersData.possessionDisplay);
+                if (!isNaN(possessionValue)) {
+                    possessionTimer.textContent = timersData.possessionDisplay;
+                    
+                    // Cambiar estilos según el tiempo restante
+                    possessionTimer.classList.remove('warning', 'danger');
+                    
+                    if (possessionValue <= 5) {
+                        possessionTimer.classList.add('danger');
+                    } else if (possessionValue <= 10) {
+                        possessionTimer.classList.add('warning');
+                    }
+                }
+            }
+            
+            if (timersData.isRunning !== undefined && timersData.isRunning !== null) {
+                const isRunning = timersData.isRunning;
+                const possessionValue = parseInt(possessionTimer.textContent);
+                
+                if (possessionValue <= 0) {
+                    possessionStatus.textContent = 'TERMINADO';
+                    possessionStatus.className = 'status status-finished';
+                } else if (isRunning) {
+                    possessionStatus.textContent = 'EN CURSO';
+                    possessionStatus.className = 'status status-running';
+                } else {
+                    possessionStatus.textContent = 'PAUSADO';
+                    possessionStatus.className = 'status status-paused';
+                }
+            }
+        }
+        
+        // Función para actualizar el temporizador del partido
+        function updateGameTimer(timersData) {
+            if (!timersData) return;
+            
+            const gameTimer = document.getElementById('gameTimer');
+            const gameTimerStatus = document.getElementById('gameTimerStatus');
+            
+            if (timersData.gameTimerDisplay !== undefined && timersData.gameTimerDisplay !== null) {
+                gameTimer.textContent = timersData.gameTimerDisplay;
+            }
+            
+            if (timersData.isRunning !== undefined && timersData.isRunning !== null) {
+                const isRunning = timersData.isRunning;
+                
+                if (isRunning) {
+                    gameTimerStatus.textContent = 'EN CURSO';
+                    gameTimerStatus.className = 'status status-running';
+                } else {
+                    gameTimerStatus.textContent = 'PAUSADO';
+                    gameTimerStatus.className = 'status status-paused';
+                }
+            }
+        }
+        
+        // Función para actualizar datos del partido (incluyendo marcador)
+        function updateGameData(data) {
+            if (!data) return;
+            
+            // Actualizar nombres de equipos
+            if (data.localName !== undefined && data.localName !== null) {
+                document.getElementById('localName').textContent = data.localName;
+            }
+            
+            if (data.visitorName !== undefined && data.visitorName !== null) {
+                document.getElementById('visitorName').textContent = data.visitorName;
+            }
+            
+            // Actualizar marcador
+            if (data.localScore !== undefined && data.localScore !== null) {
+                document.getElementById('localScore').textContent = data.localScore;
+            }
+            
+            if (data.visitorScore !== undefined && data.visitorScore !== null) {
+                document.getElementById('visitorScore').textContent = data.visitorScore;
+            }
+            
+            // Actualizar tiempos muertos locales
+            if (data.localTimeoutsUsed !== undefined && data.localTimeoutsUsed !== null) {
+                const timeouts = document.querySelectorAll('#localTimeouts .timeout-dot');
+                timeouts.forEach((dot, index) => {
+                    dot.className = 'timeout-dot';
+                    if (index < data.localTimeoutsUsed) {
+                        dot.classList.add('timeout-used');
+                    }
+                });
+            }
+            
+            // Actualizar tiempos muertos visitantes
+            if (data.visitorTimeoutsUsed !== undefined && data.visitorTimeoutsUsed !== null) {
+                const timeouts = document.querySelectorAll('#visitorTimeouts .timeout-dot');
+                timeouts.forEach((dot, index) => {
+                    dot.className = 'timeout-dot';
+                    if (index < data.visitorTimeoutsUsed) {
+                        dot.classList.add('timeout-used');
+                    }
+                });
+            }
+            
+            currentData = data;
+        }
+        
+        // Función principal para actualizar todos los datos
+        function updateAllData() {
+            const timersData = localStorage.getItem('waterpolo_timers');
+            const gameData = localStorage.getItem('waterpolo_public_data');
+            
+            if (timersData) {
+                try {
+                    const parsedTimers = JSON.parse(timersData);
+                    if (JSON.stringify(parsedTimers) !== JSON.stringify(currentTimers)) {
+                        currentTimers = parsedTimers;
+                        updatePossessionTimer(parsedTimers);
+                        updateGameTimer(parsedTimers);
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos del temporizador:', error);
+                }
+            }
+            
+            if (gameData) {
+                try {
+                    const parsedData = JSON.parse(gameData);
+                    if (JSON.stringify(parsedData) !== JSON.stringify(currentData)) {
+                        updateGameData(parsedData);
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos del partido:', error);
+                }
+            }
+        }
+        
+        // Reproducir sonido cuando la posesión llega a 0
+        function playTimeoutSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.8);
+            } catch(e) {
+                console.log("No se pudo reproducir sonido");
+            }
+        }
+        
+        // Reproducir sonido cuando hay un gol
+        function playGoalSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // Do
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // Mi
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // Sol
+                
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch(e) {
+                console.log("No se pudo reproducir sonido de gol");
+            }
+        }
+        
+        // Verificar si la posesión llegó a 0 para reproducir sonido
+        function checkForTimeoutSound() {
+            if (currentTimers && currentTimers.possessionDisplay !== undefined) {
+                const possessionValue = parseInt(currentTimers.possessionDisplay);
+                const isRunning = currentTimers.isRunning;
+                
+                if (possessionValue === 0 && isRunning === false) {
+                    // Solo reproducir sonido una vez cuando se pausa en 0
+                    const lastSoundTime = localStorage.getItem('lastTimeoutSound') || 0;
+                    const currentTime = Date.now();
+                    
+                    if (currentTime - lastSoundTime > 1000) { // Evitar sonidos repetidos
+                        playTimeoutSound();
+                        localStorage.setItem('lastTimeoutSound', currentTime);
+                    }
+                }
+            }
+        }
+        
+        // Verificar si hubo un cambio en el marcador para reproducir sonido
+        function checkForGoalSound(previousData, currentData) {
+            if (previousData && currentData) {
+                if (previousData.localScore !== currentData.localScore || 
+                    previousData.visitorScore !== currentData.visitorScore) {
+                    
+                    const lastGoalSoundTime = localStorage.getItem('lastGoalSound') || 0;
+                    const currentTime = Date.now();
+                    
+                    if (currentTime - lastGoalSoundTime > 1000) { // Evitar sonidos repetidos
+                        playGoalSound();
+                        localStorage.setItem('lastGoalSound', currentTime);
+                    }
+                }
+            }
+        }
+        
+        // Cargar datos iniciales y configurar intervalo de actualización
+        window.addEventListener('DOMContentLoaded', () => {
+            // Cargar datos iniciales
+            const initialTimersData = localStorage.getItem('waterpolo_timers');
+            const initialGameData = localStorage.getItem('waterpolo_public_data');
+            
+            if (initialTimersData) {
+                try {
+                    const data = JSON.parse(initialTimersData);
+                    currentTimers = data;
+                    updatePossessionTimer(data);
+                    updateGameTimer(data);
+                } catch(error) {
+                    console.log('Error al cargar datos iniciales del temporizador:', error);
+                }
+            }
+            
+            if (initialGameData) {
+                try {
+                    const data = JSON.parse(initialGameData);
+                    const previousData = currentData;
+                    currentData = data;
+                    updateGameData(data);
+                    checkForGoalSound(previousData, data);
+                } catch(error) {
+                    console.log('Error al cargar datos iniciales del partido:', error);
+                }
+            }
+            
+            // Configurar actualización periódica
+            let previousGameData = currentData;
+            setInterval(() => {
+                updateAllData();
+                checkForTimeoutSound();
+                
+                // Verificar cambios en el marcador
+                if (currentData && JSON.stringify(previousGameData) !== JSON.stringify(currentData)) {
+                    checkForGoalSound(previousGameData, currentData);
+                    previousGameData = {...currentData};
+                }
+            }, 200); // Actualizar cada 200ms para mayor fluidez
+            
+            // Configurar notificaciones si están disponibles
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+        
+        // Función para mostrar notificación cuando la posesión termina
+        function showTimeoutNotification() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('⏰ Posesión Terminada', {
+                    body: 'El tiempo de posesión ha llegado a 0. Ambos temporizadores están pausados.',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230a2463"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                });
+            }
+        }
+        
+        // Función para mostrar notificación cuando hay un gol
+        function showGoalNotification(localScore, visitorScore) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('⚽ ¡GOL!', {
+                    body: `Marcador actual: ${localScore} - ${visitorScore}`,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffd166"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                });
+            }
+        }
+        
+        // Escuchar eventos de almacenamiento para sincronización entre pestañas
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'waterpolo_timers' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    updatePossessionTimer(data);
+                    updateGameTimer(data);
+                    
+                    // Mostrar notificación si la posesión llegó a 0
+                    if (data.possessionDisplay === '0' && data.isRunning === false) {
+                        showTimeoutNotification();
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos del temporizador:', error);
+                }
+            }
+            
+            if (e.key === 'waterpolo_public_data' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    const previousData = currentData;
+                    updateGameData(data);
+                    
+                    // Verificar si hubo un gol
+                    if (previousData && (previousData.localScore !== data.localScore || 
+                                         previousData.visitorScore !== data.visitorScore)) {
+                        showGoalNotification(data.localScore, data.visitorScore);
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos del partido:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

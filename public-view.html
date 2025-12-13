@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcador Público - Waterpolo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Mismos estilos que en el index.html para la vista pública */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a2463 0%, #1a3d7a 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(0, 30, 80, 0.8);
+            border-radius: 15px;
+            margin-bottom: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .title {
+            font-size: 2.3rem;
+            color: #ffd166;
+            font-weight: 700;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-grow: 1;
+            min-height: 400px;
+        }
+        
+        .team {
+            text-align: center;
+            flex: 1;
+            padding: 15px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .team-logo {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 15px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.8rem;
+            color: white;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+        }
+        
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .team-name {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: white;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .team-score {
+            font-size: 5.5rem;
+            font-weight: 800;
+            color: #ffd166;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timeouts {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .timeout-dot {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .timeout-used {
+            background-color: #ff6b6b;
+        }
+        
+        .center-info {
+            text-align: center;
+            padding: 0 30px;
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .timers-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 30px;
+        }
+        
+        .timer-box {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .timer-label {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: #ffd166;
+        }
+        
+        .game-timer {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: #4ecdc4;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .possession-timer {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: #4ecdc4;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .period {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd166;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        
+        .timer-status {
+            font-size: 1.2rem;
+            margin-top: 8px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .status-running {
+            background-color: rgba(78, 205, 196, 0.3);
+            color: #4ecdc4;
+        }
+        
+        .status-paused {
+            background-color: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title" id="publicTitle">WATERPOLO - EN DIRECTO</h1>
+    </div>
+    
+    <div class="scoreboard">
+        <div class="team" id="publicLocalTeam">
+            <div class="team-logo" id="publicLocalLogo">
+                <i class="fas fa-swimmer"></i>
+            </div>
+            <div class="team-name" id="publicLocalName">LOCAL</div>
+            <div class="team-score" id="publicLocalScore">0</div>
+            <div class="timeouts" id="publicLocalTimeouts">
+                <div class="timeout-dot">1</div>
+                <div class="timeout-dot">2</div>
+            </div>
+        </div>
+        
+        <div class="center-info">
+            <div class="timers-container">
+                <div class="timer-box">
+                    <div class="timer-label">TIEMPO DE PARTIDO</div>
+                    <div class="game-timer" id="publicGameTimer">08:00</div>
+                    <div class="timer-status status-paused" id="gameTimerStatus">PAUSADO</div>
+                </div>
+                
+                <div class="timer-box">
+                    <div class="timer-label">TIEMPO DE POSESIÓN</div>
+                    <div class="possession-timer" id="publicPossessionTimer">30</div>
+                    <div class="timer-status status-paused" id="possessionTimerStatus">PAUSADO</div>
+                </div>
+            </div>
+            
+            <div class="period" id="publicPeriod">PERIODO 1</div>
+        </div>
+        
+        <div class="team" id="publicVisitorTeam">
+            <div class="team-logo" id="publicVisitorLogo">
+                <i class="fas fa-water"></i>
+            </div>
+            <div class="team-name" id="publicVisitorName">VISITANTE</div>
+            <div class="team-score" id="publicVisitorScore">0</div>
+            <div class="timeouts" id="publicVisitorTimeouts">
+                <div class="timeout-dot">1</div>
+                <div class="timeout-dot">2</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Marcador de Waterpolo - Actualizado en tiempo real
+    </div>
+
+    <script>
+        // Variables para sincronización
+        let currentData = null;
+        let currentTimers = null;
+        
+        // Función para actualizar la vista pública con datos
+        function updatePublicView(data) {
+            if (!data) return;
+            
+            if (data.localScore !== undefined && data.localScore !== null) {
+                document.getElementById('publicLocalScore').textContent = data.localScore;
+            }
+            
+            if (data.visitorScore !== undefined && data.visitorScore !== null) {
+                document.getElementById('publicVisitorScore').textContent = data.visitorScore;
+            }
+            
+            if (data.localName !== undefined && data.localName !== null) {
+                document.getElementById('publicLocalName').textContent = data.localName;
+            }
+            
+            if (data.visitorName !== undefined && data.visitorName !== null) {
+                document.getElementById('publicVisitorName').textContent = data.visitorName;
+            }
+            
+            if (data.localLogo !== undefined && data.localLogo !== null) {
+                document.getElementById('publicLocalLogo').innerHTML = data.localLogo;
+            }
+            
+            if (data.visitorLogo !== undefined && data.visitorLogo !== null) {
+                document.getElementById('publicVisitorLogo').innerHTML = data.visitorLogo;
+            }
+            
+            if (data.localTimeoutsUsed !== undefined && data.localTimeoutsUsed !== null) {
+                const timeouts = document.querySelectorAll('#publicLocalTimeouts .timeout-dot');
+                timeouts.forEach((dot, index) => {
+                    dot.className = 'timeout-dot';
+                    if (index < data.localTimeoutsUsed) {
+                        dot.classList.add('timeout-used');
+                    }
+                });
+            }
+            
+            if (data.visitorTimeoutsUsed !== undefined && data.visitorTimeoutsUsed !== null) {
+                const timeouts = document.querySelectorAll('#publicVisitorTimeouts .timeout-dot');
+                timeouts.forEach((dot, index) => {
+                    dot.className = 'timeout-dot';
+                    if (index < data.visitorTimeoutsUsed) {
+                        dot.classList.add('timeout-used');
+                    }
+                });
+            }
+            
+            if (data.periodDisplay !== undefined && data.periodDisplay !== null) {
+                document.getElementById('publicPeriod').textContent = data.periodDisplay;
+            }
+            
+            // Actualizar título
+            if (data.publicTitle !== undefined && data.publicTitle !== null) {
+                document.getElementById('publicTitle').textContent = data.publicTitle;
+            }
+            
+            currentData = data;
+        }
+        
+        // Función para actualizar temporizadores
+        function updateTimers(timersData) {
+            if (!timersData) return;
+            
+            if (timersData.gameTimerDisplay !== undefined && timersData.gameTimerDisplay !== null) {
+                document.getElementById('publicGameTimer').textContent = timersData.gameTimerDisplay;
+            }
+            
+            if (timersData.possessionDisplay !== undefined && timersData.possessionDisplay !== null) {
+                const possessionValue = parseInt(timersData.possessionDisplay);
+                if (!isNaN(possessionValue)) {
+                    document.getElementById('publicPossessionTimer').textContent = timersData.possessionDisplay;
+                    // Cambiar color cuando queden 5 segundos o menos
+                    if (possessionValue <= 5) {
+                        document.getElementById('publicPossessionTimer').style.color = '#ff6b6b';
+                    } else {
+                        document.getElementById('publicPossessionTimer').style.color = '#4ecdc4';
+                    }
+                }
+            }
+            
+            if (timersData.isRunning !== undefined && timersData.isRunning !== null) {
+                const status = timersData.isRunning ? 'EN CURSO' : 'PAUSADO';
+                const statusClass = timersData.isRunning ? 'status-running' : 'status-paused';
+                
+                document.getElementById('gameTimerStatus').textContent = status;
+                document.getElementById('gameTimerStatus').className = 'timer-status ' + statusClass;
+                
+                document.getElementById('possessionTimerStatus').textContent = status;
+                document.getElementById('possessionTimerStatus').className = 'timer-status ' + statusClass;
+            }
+            
+            currentTimers = timersData;
+        }
+        
+        // Sincronización a través de localStorage (compatible con versión web)
+        function checkForUpdates() {
+            const newData = localStorage.getItem('waterpolo_public_data');
+            const newTimers = localStorage.getItem('waterpolo_timers');
+            
+            if (newData) {
+                try {
+                    const parsedData = JSON.parse(newData);
+                    if (JSON.stringify(parsedData) !== JSON.stringify(currentData)) {
+                        updatePublicView(parsedData);
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos:', error);
+                }
+            }
+            
+            if (newTimers) {
+                try {
+                    const parsedTimers = JSON.parse(newTimers);
+                    if (JSON.stringify(parsedTimers) !== JSON.stringify(currentTimers)) {
+                        updateTimers(parsedTimers);
+                    }
+                } catch(error) {
+                    console.log('Error al parsear datos de temporizadores:', error);
+                }
+            }
+        }
+        
+        // Cargar datos iniciales
+        window.addEventListener('DOMContentLoaded', () => {
+            const initialData = localStorage.getItem('waterpolo_public_data');
+            const initialTimersData = localStorage.getItem('waterpolo_timers');
+            
+            if (initialData) {
+                try {
+                    const data = JSON.parse(initialData);
+                    updatePublicView(data);
+                } catch(error) {
+                    console.log('Error al cargar datos iniciales:', error);
+                }
+            }
+            
+            if (initialTimersData) {
+                try {
+                    const data = JSON.parse(initialTimersData);
+                    updateTimers(data);
+                } catch(error) {
+                    console.log('Error al cargar datos de temporizadores:', error);
+                }
+            }
+            
+            // Sincronizar cada 500ms
+            setInterval(checkForUpdates, 500);
+        });
+    </script>
+</body>
+</html>
